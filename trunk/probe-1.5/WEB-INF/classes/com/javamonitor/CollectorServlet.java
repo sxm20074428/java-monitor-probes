@@ -72,6 +72,7 @@ public class CollectorServlet extends HttpServlet {
                                         "This probe was hit by an unexpected exception (it will retry in fifteen minutes): "
                                                 + e.getMessage(), e);
                         Thread.sleep(15 * MINUTES);
+                        log.log(Level.INFO, "resuming operation");
                     }
                 }
             } catch (InterruptedException e) {
