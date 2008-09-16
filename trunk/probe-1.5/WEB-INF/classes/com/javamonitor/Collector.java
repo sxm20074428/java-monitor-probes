@@ -53,8 +53,12 @@ final class Collector {
         final Properties request = queryItems();
         request.put("account", account);
         request.put("localIp", InetAddress.getLocalHost().getHostAddress());
-        request.put("lowestPort", lowestPort);
-        request.put("appserver", appserver);
+        if (lowestPort != null) {
+            request.put("lowestPort", lowestPort);
+        }
+        if (appserver != null) {
+            request.put("appserver", appserver);
+        }
         if (session != null) {
             request.put(SESSION, session);
         }
