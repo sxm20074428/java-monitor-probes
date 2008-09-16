@@ -169,7 +169,12 @@ final class Collector {
     }
 
     private static Properties push(final Properties request) throws IOException {
-        final URL url = new URL("http://beta-monitor.com/lemongrass/1.0/push");
+        URL url; 
+        if(ConfigProperties.SSLPUSH.enabled()) {
+            url = new URL("https://beta-monitor.com/lemongrass/1.0/push");
+        } else {
+            url = new URL("http://beta-monitor.com/lemongrass/1.0/push");
+        }
         HttpURLConnection connection = null;
         PrintStream out = null;
         InputStream in = null;
