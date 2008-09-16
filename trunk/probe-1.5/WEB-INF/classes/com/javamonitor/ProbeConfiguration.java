@@ -15,7 +15,7 @@ public class ProbeConfiguration {
     
     
     
-    private static Logger log = Logger.getLogger(ProbeConfiguration.class);
+    private static Logger log = Logger.getLogger(ProbeConfiguration.class.getName());
     
     
     public static String getProperty(String key) {
@@ -26,6 +26,8 @@ public class ProbeConfiguration {
                 log.warning("Could not instantiate probe configuration due to security constraints; Use different form of configuration or relax policy to allow properties of format com.javamonitor");
             }
         }
+        
+        return null;
     }
     
     public static boolean isEnabled(String key) {
@@ -37,6 +39,8 @@ public class ProbeConfiguration {
                 log.warning("Could not instantiate probe configuration due to security constraints; Use different form of configuration or relax policy to allow properties of format com.javamonitor");
             }
         }
+        
+        return false;
     }
     
 }
