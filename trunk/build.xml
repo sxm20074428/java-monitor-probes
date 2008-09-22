@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="changeme" default="all" basedir=".">
+    <property name="src" location="${basedir}/probe-1.5/WEB-INF/classes/" />
+    <property name="bin" location="${src}" /> <!-- KJK alert -->
+    <property name="web" location="${basedir}/probe-1.5/WEB-INF/" />
+    <property name="lib" location="${basedir}/lib" />
+    
+    <property name="dist" location="${basedir}/dist" />
+    <target name="all">
+        <!-- TODO define script. See Help menu or http://ant.apache.org/ -->
+    </target>
+    
+    <target name="dist">
+        
+    </target>
+    
+    <target name="compile15">
+        <javac srcdir="${src}" destdir="${bin}" debug="true" fork="true" failonerror="true">
+            <classpath>
+                <pathelement location="${lib}/servlet-api.jar" />
+            </classpath>
+        </javac>
+    </target>
+    
+    <target name="compile14">
+        
+    </target>
+    
+    <target name="package" depends="compile15">
+        <war destfile="${dist}/java-monitor.war" webxml="${web}/web.xml" >
+            <classes dir="${src}" />
+        </war>
+    </target>
+</project>
