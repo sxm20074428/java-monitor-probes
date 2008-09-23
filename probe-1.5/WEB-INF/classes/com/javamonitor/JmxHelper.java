@@ -10,6 +10,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
+import com.javamonitor.mbeans.GarbageCollector;
 import com.javamonitor.mbeans.Server;
 
 /**
@@ -76,12 +77,22 @@ public class JmxHelper {
      */
     private static void register(final Object mbean,
             final String objectNameString) {
+        System.out.println("XXX reginstering " + objectNameString);
         try {
             final ObjectName objectName = new ObjectName(objectNameString);
+            
+            try {
+                getMBeanServer().unregisterMBean(objectName);
+            } catch (Exception e) {
+                // ignore, this was just to clean up
+            }
+            
             getMBeanServer().registerMBean(mbean, objectName);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             throw e;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -105,6 +116,24 @@ public class JmxHelper {
     }
 
     /**
+     * Query for a string, based on the object name. Convenience method that
+     * does the casts.
+     * 
+     * @param objectName
+     *            The object name to query.
+     * @param attribute
+     *            The attribute to query.
+     * @return The value of the attribute, as string.
+     * @throws Exception
+     *             When there was a problem querying.
+     */
+    public static String queryString(final ObjectName objectName,
+            final String attribute) throws Exception {
+        final Object value = query(objectName, attribute);
+        return value == null ? null : value.toString();
+    }
+
+    /**
      * Query for an integer, based on the object name. Convenience method that
      * does the casts.
      * 
@@ -120,6 +149,24 @@ public class JmxHelper {
             final String attribute) throws Exception {
         final Object value = query(objectName, attribute);
         return value == null ? null : Integer.parseInt(value.toString());
+    }
+
+    /**
+     * Query for a long, based on the object name. Convenience method that does
+     * the casts.
+     * 
+     * @param objectName
+     *            The object name to query.
+     * @param attribute
+     *            The attribute to query.
+     * @return The value of the attribute, as string.
+     * @throws Exception
+     *             When there was a problem querying.
+     */
+    public static Long queryLong(final ObjectName objectName,
+            final String attribute) throws Exception {
+        final Object value = query(objectName, attribute);
+        return value == null ? null : Long.parseLong(value.toString());
     }
 
     /**
@@ -192,11 +239,19 @@ public class JmxHelper {
         }
     }
 
+    private static final GarbageCollector quickGc = new GarbageCollector(true);
+
+    private static final GarbageCollector thoroughGc = new GarbageCollector(
+            false);
+
     /**
      * Register the cool beans we need to find our way in the JMX jungle.
      */
     public static void registerCoolBeans() {
         register(new Server(), Server.objectName);
+
+        register(quickGc, quickGc.getObjectName());
+        register(thoroughGc, thoroughGc.getObjectName());
     }
 
     /**
@@ -205,6 +260,10 @@ public class JmxHelper {
     public static void unregisterCoolBeans() {
         try {
             getMBeanServer().unregisterMBean(new ObjectName(Server.objectName));
+            getMBeanServer().unregisterMBean(
+                    new ObjectName(quickGc.getObjectName()));
+            getMBeanServer().unregisterMBean(
+                    new ObjectName(thoroughGc.getObjectName()));
         } catch (InstanceNotFoundException e) {
             // ignored...
         } catch (MBeanRegistrationException e) {
