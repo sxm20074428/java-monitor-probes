@@ -77,7 +77,6 @@ public class JmxHelper {
      */
     private static void register(final Object mbean,
             final String objectNameString) {
-        System.out.println("XXX reginstering " + objectNameString);
         try {
             final ObjectName objectName = new ObjectName(objectNameString);
             
@@ -89,10 +88,8 @@ public class JmxHelper {
             
             getMBeanServer().registerMBean(mbean, objectName);
         } catch (RuntimeException e) {
-            e.printStackTrace();
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
