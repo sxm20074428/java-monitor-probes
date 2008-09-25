@@ -37,6 +37,8 @@ final class Collector {
      * Sign in with the collector server and ask for permission to send
      * statistics.
      * 
+     * @param url
+     *            The URL to push to.
      * @return <code>true</code> if the configuration was stale and we need to
      *         reconfigure. <code>false</code> if we may just reuse the
      *         existing list.
@@ -47,7 +49,7 @@ final class Collector {
      * @throws Exception
      *             When there was a problem.
      */
-    public static boolean push() throws Exception, OnHoldException {
+    public static boolean push(final URL url) throws Exception, OnHoldException {
         init();
 
         final Properties request = queryItems();
@@ -63,7 +65,7 @@ final class Collector {
             request.put(SESSION, session);
         }
 
-        final Properties response = push(request);
+        final Properties response = push(url, request);
 
         return parse(response);
     }
@@ -168,13 +170,8 @@ final class Collector {
         return false;
     }
 
-    private static Properties push(final Properties request) throws IOException {
-        final URL url /*; 
-        if(ConfigProperties.SSLPUSH.enabled()) {
-            url = new URL("https://beta-monitor.com/lemongrass/1.0/push");
-        } else {
-            url */ = new URL("http://beta-monitor.com/lemongrass/1.0/push");
-        // }
+    private static Properties push(final URL url, final Properties request)
+            throws IOException {
         HttpURLConnection connection = null;
         PrintStream out = null;
         InputStream in = null;
