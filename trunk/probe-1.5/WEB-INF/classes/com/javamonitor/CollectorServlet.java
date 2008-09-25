@@ -1,5 +1,7 @@
 package com.javamonitor;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,11 +54,21 @@ public class CollectorServlet extends HttpServlet {
          */
         public void run() {
             try {
+                final URL url;
+                try {
+                    url = new URL(getServletConfig().getInitParameter("url"));
+                } catch (MalformedURLException e) {
+                    log.log(Level.SEVERE,
+                            "Java-monitor collector cannot start: bad url in web.xml: "
+                                    + e.getMessage(), e);
+                    return; // bail out, this is going nowhere
+                }
+                
                 for (;;) {
                     try {
                         for (;;) {
-                            if (Collector.push()) {
-                                Collector.push();
+                            if (Collector.push(url)) {
+                                Collector.push(url);
                             }
 
                             Thread.sleep(1 * MINUTES);
