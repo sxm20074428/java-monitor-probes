@@ -12,6 +12,7 @@ import javax.management.openmbean.CompositeData;
 
 import com.javamonitor.mbeans.GarbageCollector;
 import com.javamonitor.mbeans.Server;
+import com.javamonitor.mbeans.Threading;
 
 /**
  * The JMX facade, making JMX easy.
@@ -249,6 +250,8 @@ public class JmxHelper {
 
         register(quickGc, quickGc.getObjectName());
         register(thoroughGc, thoroughGc.getObjectName());
+        
+        register(new Threading(), Threading.objectName);
     }
 
     /**
@@ -261,6 +264,8 @@ public class JmxHelper {
                     new ObjectName(quickGc.getObjectName()));
             getMBeanServer().unregisterMBean(
                     new ObjectName(thoroughGc.getObjectName()));
+            getMBeanServer().unregisterMBean(
+                    new ObjectName(Threading.objectName));
         } catch (InstanceNotFoundException e) {
             // ignored...
         } catch (MBeanRegistrationException e) {
