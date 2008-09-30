@@ -2,6 +2,9 @@ package com.javamonitor.mbeans;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import com.javamonitor.JmxHelper;
 
@@ -17,16 +20,40 @@ public class Threading implements ThreadingMBean {
     public static final String objectName = JmxHelper.objectNameBase
             + "Threading";
 
-    private ThreadInfo[] findDeadlock() {
-        final long[] threadIds = ManagementFactory.getThreadMXBean()
-                .findMonitorDeadlockedThreads();
+    private static final ThreadMXBean threadMXBean = ManagementFactory
+            .getThreadMXBean();
+
+    private static Method findDeadlockMethod = null;
+    static {
+        try {
+            findDeadlockMethod = ThreadMXBean.class
+                    .getMethod("findDeadlockedThreads");
+        } catch (Exception ignored) {
+            // woops, well I guess this is a 1.5 JVM then
+
+            try {
+                findDeadlockMethod = ThreadMXBean.class
+                        .getMethod("findMonitorDeadlockedThreads");
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private ThreadInfo[] findDeadlock() throws IllegalAccessException,
+            InvocationTargetException {
+        final long[] threadIds = (long[]) findDeadlockMethod.invoke(
+                threadMXBean, (Object[]) null);
+
         if (threadIds == null || threadIds.length < 1) {
             // no deadlock, we're done
             return null;
         }
 
-        final ThreadInfo[] threads = ManagementFactory.getThreadMXBean()
-                .getThreadInfo(threadIds, Integer.MAX_VALUE);
+        final ThreadInfo[] threads = threadMXBean.getThreadInfo(threadIds,
+                Integer.MAX_VALUE);
         return threads;
     }
 
@@ -34,16 +61,21 @@ public class Threading implements ThreadingMBean {
      * @see com.javamonitor.mbeans.ThreadingMBean#getDeadlockStacktraces()
      */
     public String getDeadlockStacktraces() {
-        final ThreadInfo[] threads = findDeadlock();
-        if (threads == null) {
-            // no deadlock, we're done
-            return null;
-        }
+        try {
+            final ThreadInfo[] threads = findDeadlock();
+            if (threads == null) {
+                // no deadlock, we're done
+                return null;
+            }
 
-        return stacktraces(threads, 0);
+            return stacktraces(threads, 0);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
     }
 
     private static final int MAX_STACK = 10;
+
     private String stacktraces(final ThreadInfo[] threads, final int i) {
         if (i >= threads.length) {
             return "";
