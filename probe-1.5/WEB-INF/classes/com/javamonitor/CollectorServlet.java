@@ -27,7 +27,11 @@ public class CollectorServlet extends HttpServlet {
     public void init() throws ServletException {
         super.init();
 
-        JmxHelper.registerCoolBeans();
+        try {
+            JmxHelper.registerCoolBeans();
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
 
         collectorThread = new Thread(new CollectorDriver(),
                 "java-monitor collector");

@@ -1,10 +1,13 @@
 package com.javamonitor;
 
 import java.lang.management.ManagementFactory;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
@@ -16,51 +19,73 @@ import com.javamonitor.mbeans.Server;
 import com.javamonitor.mbeans.Threading;
 
 /**
- * The JMX facade, making JMX easy.
+ * The JMX facade, making JMX easy. Apart from making the JMX interface easier
+ * to use, this helper also does its best to find mbeans and cache their
+ * lookups. The reason for doing this is that there may be more than one mbean
+ * server and we'd like to give Java-monitor a single view over all of those.
+ * <p>
+ * If we have to register mbeans
  * 
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 public class JmxHelper {
-    private static MBeanServer mbeanserver = null;
-
     /**
      * The base of all the helper object names.
      */
     public static final String objectNameBase = "com.javamonitor:type=";
 
-    /**
-     * Locate the mbean server for this JVM instance. We try to look for the
-     * JBoss specific mbean server. Failing that, we try to reuse any
-     * preexisting mbean server, or we create our own.
-     * 
-     * @return An appropriate mbean server.
-     */
-    private static MBeanServer getMBeanServer() {
-        if (mbeanserver == null) {
-            // first, we try to see if we are running in JBoss
+    private static final Map<ObjectName, MBeanServer> knownMBeanServers = new HashMap<ObjectName, MBeanServer>();
+
+    private static MBeanServer jbossMbeanServer = null;
+    static {
+        try {
+            jbossMbeanServer = (MBeanServer) Class.forName(
+                    "org.jboss.mx.util.MBeanServerLocator").getMethod(
+                    "locateJBoss", (Class[]) null)
+                    .invoke(null, (Object[]) null);
+        } catch (Exception e) {
+            // woops: we're not running in JBoss
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static MBeanServer findMBeanServer(final ObjectName objectName) {
+        // any cached instance lookups?
+        if (knownMBeanServers.containsKey(objectName)) {
+            return knownMBeanServers.get(objectName);
+        }
+
+        // no cached instances, search high and low...
+        MBeanServer mbeanServer = null;
+        if (jbossMbeanServer != null) {
             try {
-                mbeanserver = (MBeanServer) Class.forName(
-                        "org.jboss.mx.util.MBeanServerLocator").getMethod(
-                        "locateJBoss", (Class[]) null).invoke(null,
-                        (Object[]) null);
-            } catch (Exception e) {
-                // woops: we're not running in JBoss
-            }
-
-            // try to reuse any existing mbean servers
-            if (mbeanserver == null
-                    && MBeanServerFactory.findMBeanServer(null).size() > 0) {
-                mbeanserver = (MBeanServer) MBeanServerFactory.findMBeanServer(
-                        null).get(0);
-            }
-
-            // use the platform one if all else fails
-            if (mbeanserver == null) {
-                mbeanserver = ManagementFactory.getPlatformMBeanServer();
+                if (jbossMbeanServer.getObjectInstance(objectName) != null) {
+                    mbeanServer = jbossMbeanServer;
+                }
+            } catch (InstanceNotFoundException e) {
+                // woops, not registered here...
             }
         }
 
-        return mbeanserver;
+        final List<MBeanServer> servers = MBeanServerFactory
+                .findMBeanServer(null);
+        for (int i = 0; mbeanServer == null && i < servers.size(); i++) {
+            try {
+                if (servers.get(i).getObjectInstance(objectName) != null) {
+                    mbeanServer = servers.get(i);
+                }
+            } catch (InstanceNotFoundException e) {
+                // woops, not registered here...
+            }
+        }
+
+        if (mbeanServer == null) {
+            // oh well, most likely it is here then...
+            mbeanServer = ManagementFactory.getPlatformMBeanServer();
+        }
+
+        knownMBeanServers.put(objectName, mbeanServer);
+        return mbeanServer;
     }
 
     /**
@@ -73,38 +98,29 @@ public class JmxHelper {
      */
     public static boolean mbeanExists(final String objectName) {
         try {
-            getMBeanServer().getObjectInstance(new ObjectName(objectName));
-            return true;
+            final ObjectName name = new ObjectName(objectName);
+            return findMBeanServer(name).isRegistered(name);
         } catch (Exception e) {
             return false;
         }
     }
 
     /**
-     * Register a new mbean.
+     * Register a new mbean in the platform mbean server.
      * 
      * @param mbean
      *            The mbean to register.
      * @param objectNameString
      *            The object name to register it under.
+     * @throws Exception
+     *             When we could not register the mbean.
      */
     private static void register(final Object mbean,
-            final String objectNameString) {
-        try {
-            final ObjectName objectName = new ObjectName(objectNameString);
-            
-            try {
-                getMBeanServer().unregisterMBean(objectName);
-            } catch (Exception e) {
-                // ignore, this was just to clean up
-            }
-            
-            getMBeanServer().registerMBean(mbean, objectName);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+            final String objectNameString) throws Exception {
+        unregister(objectNameString);
+
+        ManagementFactory.getPlatformMBeanServer().registerMBean(mbean,
+                new ObjectName(objectNameString));
     }
 
     /**
@@ -211,12 +227,13 @@ public class JmxHelper {
             final String attribute) throws Exception {
         final int dot = attribute.indexOf('.');
         if (dot < 0) {
-            return getMBeanServer().getAttribute(objectName, attribute);
+            return findMBeanServer(objectName).getAttribute(objectName,
+                    attribute);
         }
 
-        return resolveFields((CompositeData) getMBeanServer().getAttribute(
-                objectName, attribute.substring(0, dot)), attribute
-                .substring(dot + 1));
+        return resolveFields((CompositeData) findMBeanServer(objectName)
+                .getAttribute(objectName, attribute.substring(0, dot)),
+                attribute.substring(dot + 1));
     }
 
     private static Object resolveFields(final CompositeData attribute,
@@ -237,16 +254,30 @@ public class JmxHelper {
      * @param query
      *            The wildcarded object name to list.
      * @return A list of matching object names.
+     * @throws MalformedObjectNameException
+     *             When the query could not be parsed.
      */
     @SuppressWarnings("unchecked")
-    public static Collection<ObjectName> queryNames(final String query) {
-        try {
-            return getMBeanServer().queryNames(new ObjectName(query), null);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    public static Set<ObjectName> queryNames(final String query)
+            throws MalformedObjectNameException {
+        final ObjectName objectNameQuery = new ObjectName(query);
+        Set<ObjectName> names = new HashSet<ObjectName>();
+        if (jbossMbeanServer != null) {
+            names = jbossMbeanServer.queryNames(objectNameQuery, null);
         }
+
+        final List<MBeanServer> servers = MBeanServerFactory
+                .findMBeanServer(null);
+        for (int i = 0; names.size() == 0 && i < servers.size(); i++) {
+            names = servers.get(i).queryNames(objectNameQuery, null);
+        }
+
+        if (names.size() == 0) {
+            names = ManagementFactory.getPlatformMBeanServer().queryMBeans(
+                    objectNameQuery, null);
+        }
+
+        return names;
     }
 
     private static final GarbageCollector quickGc = new GarbageCollector(true);
@@ -256,34 +287,34 @@ public class JmxHelper {
 
     /**
      * Register the cool beans we need to find our way in the JMX jungle.
+     * 
+     * @throws Exception
+     *             When we could not register one or more beans.
      */
-    public static void registerCoolBeans() {
+    public static void registerCoolBeans() throws Exception {
         register(new Server(), Server.objectName);
-
         register(quickGc, quickGc.getObjectName());
         register(thoroughGc, thoroughGc.getObjectName());
-        
         register(new Threading(), Threading.objectName);
     }
 
     /**
-     * Unregister all the useful mbeans from the JMX registry.
+     * Unregister all the useful mbeans from the JMX registry. We assume that
+     * the registered bean was registered in the platform mbean server.
      */
     public static void unregisterCoolBeans() {
+        unregister(Server.objectName);
+        unregister(quickGc.getObjectName());
+        unregister(thoroughGc.getObjectName());
+        unregister(Threading.objectName);
+    }
+
+    private static void unregister(final String objectName) {
         try {
-            getMBeanServer().unregisterMBean(new ObjectName(Server.objectName));
-            getMBeanServer().unregisterMBean(
-                    new ObjectName(quickGc.getObjectName()));
-            getMBeanServer().unregisterMBean(
-                    new ObjectName(thoroughGc.getObjectName()));
-            getMBeanServer().unregisterMBean(
-                    new ObjectName(Threading.objectName));
-        } catch (InstanceNotFoundException e) {
-            // ignored...
-        } catch (MBeanRegistrationException e) {
-            // ignored...
-        } catch (MalformedObjectNameException e) {
-            // ignored...
+            ManagementFactory.getPlatformMBeanServer().unregisterMBean(
+                    new ObjectName(objectName));
+        } catch (Exception e) {
+            // ignore, this was just to clean up
         }
     }
 }
