@@ -1,11 +1,11 @@
 package com.javamonitor;
 
-import java.lang.management.ManagementFactory;
 import java.util.Collection;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -29,8 +29,8 @@ public class JmxHelper {
 
     /**
      * Locate the mbean server for this JVM instance. We try to look for the
-     * JBoss specific mbean server. Failing that, we just use the JVM's platorm
-     * mbean server.
+     * JBoss specific mbean server. Failing that, we try to reuse any
+     * preexisting mbean server, or we create our own.
      * 
      * @return An appropriate mbean server.
      */
@@ -43,8 +43,19 @@ public class JmxHelper {
                         "locateJBoss", (Class[]) null).invoke(null,
                         (Object[]) null);
             } catch (Exception e) {
-                // woops: not JBoss. Use the platform mbean server instead
-                mbeanserver = ManagementFactory.getPlatformMBeanServer();
+                // woops: we're not running in JBoss
+            }
+
+            // try to reuse any existing mbean servers
+            if (mbeanserver == null
+                    && MBeanServerFactory.findMBeanServer(null).size() > 0) {
+                mbeanserver = (MBeanServer) MBeanServerFactory.findMBeanServer(
+                        null).get(0);
+            }
+
+            // ore create one if all else fails
+            if (mbeanserver == null) {
+                mbeanserver = MBeanServerFactory.createMBeanServer();
             }
         }
 
