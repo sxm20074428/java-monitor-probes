@@ -1,5 +1,6 @@
 package com.javamonitor;
 
+import java.lang.management.ManagementFactory;
 import java.util.Collection;
 
 import javax.management.InstanceNotFoundException;
@@ -53,9 +54,9 @@ public class JmxHelper {
                         null).get(0);
             }
 
-            // ore create one if all else fails
+            // use the platform one if all else fails
             if (mbeanserver == null) {
-                mbeanserver = MBeanServerFactory.createMBeanServer();
+                mbeanserver = ManagementFactory.getPlatformMBeanServer();
             }
         }
 
