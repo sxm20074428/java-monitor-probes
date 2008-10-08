@@ -86,10 +86,7 @@ final class Collector {
             lowestPort = JmxHelper.queryString(Server.objectName,
                     Server.httpPortAttribute);
             appserver = JmxHelper.queryString(Server.objectName,
-                    Server.nameAttribute)
-                    + " "
-                    + JmxHelper.queryString(Server.objectName,
-                            Server.versionAttribute);
+                    Server.nameAttribute);
         }
     }
 
