@@ -71,7 +71,7 @@ public class GarbageCollector implements GarbageCollectorMBean {
 
             try {
                 final ObjectName gc = new ObjectName(
-                        "java.lang:type=GarbageCollector,name=PS MarkSweepCompact");
+                        "java.lang:type=GarbageCollector,name=PS MarkSweep");
                 JmxHelper.query(gc, "Name");
                 actualGC = gc;
             } catch (Exception e) {
