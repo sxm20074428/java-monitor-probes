@@ -1,9 +1,5 @@
 package com.javamonitor.mbeans;
 
-import java.util.Collection;
-
-import javax.management.ObjectName;
-
 import com.javamonitor.JmxHelper;
 
 /**
@@ -37,10 +33,17 @@ public class Server implements ServerMBean {
     public static final String versionAttribute = "Version";
 
     /**
-     * Create a new server info aggregator bean.
+     * Create a new server info aggregator bean. Here we try to find out in what
+     * server we're running and instantiate the correct server-specific MBean.
+     * 
+     * Note that we have to test for Tomcat after the others, because Tomcat is
+     * used here and there as an embedded server. In such a case, we want to
+     * detect the outer server, not the embedded Tomcat.
      */
     public Server() {
-        if (ServerTomcat.runningInTomcat()) {
+        if (ServerJBoss.runningInJBoss()) {
+            actualServer = new ServerJBoss();
+        } else if (ServerTomcat.runningInTomcat()) {
             actualServer = new ServerTomcat();
         } else {
             actualServer = null;
