@@ -35,6 +35,7 @@ final class ServerTomcat implements ServerMBean {
      */
     public Integer getHttpPort() throws Exception {
         Collection<ObjectName> processors = null;
+        int slept = 0;
         do {
             processors = JmxHelper.queryNames("Catalina:type=Connector,*");
             if (processors.size() < 1) {
@@ -44,7 +45,12 @@ final class ServerTomcat implements ServerMBean {
                     // won't happen...
                 }
             }
-        } while (processors.size() < 1);
+        } while (processors.size() < 1 && slept++ < 30);
+
+        if (processors.size() < 0) {
+            throw new IllegalStateException(
+                    "Tomcat connector MBeans were not loaded after 30 seconds, aborting");
+        }
 
         int lowest = Integer.MAX_VALUE;
         for (final ObjectName processor : processors) {
