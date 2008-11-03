@@ -36,18 +36,6 @@ public class JmxHelper {
 
     private static final Map<ObjectName, MBeanServer> knownMBeanServers = new HashMap<ObjectName, MBeanServer>();
 
-    private static MBeanServer jbossMbeanServer = null;
-    static {
-        try {
-            jbossMbeanServer = (MBeanServer) Class.forName(
-                    "org.jboss.mx.util.MBeanServerLocator").getMethod(
-                    "locateJBoss", (Class[]) null)
-                    .invoke(null, (Object[]) null);
-        } catch (Exception e) {
-            // woops: we're not running in JBoss
-        }
-    }
-
     @SuppressWarnings("unchecked")
     private static MBeanServer findMBeanServer(final ObjectName objectName) {
         // any cached instance lookups?
@@ -57,15 +45,6 @@ public class JmxHelper {
 
         // no cached instances, search high and low...
         MBeanServer mbeanServer = null;
-        if (jbossMbeanServer != null) {
-            try {
-                if (jbossMbeanServer.getObjectInstance(objectName) != null) {
-                    mbeanServer = jbossMbeanServer;
-                }
-            } catch (InstanceNotFoundException e) {
-                // woops, not registered here...
-            }
-        }
 
         final List<MBeanServer> servers = MBeanServerFactory
                 .findMBeanServer(null);
@@ -262,9 +241,6 @@ public class JmxHelper {
             throws MalformedObjectNameException {
         final ObjectName objectNameQuery = new ObjectName(query);
         Set<ObjectName> names = new HashSet<ObjectName>();
-        if (jbossMbeanServer != null) {
-            names = jbossMbeanServer.queryNames(objectNameQuery, null);
-        }
 
         final List<MBeanServer> servers = MBeanServerFactory
                 .findMBeanServer(null);
