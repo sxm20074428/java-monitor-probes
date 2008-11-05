@@ -14,7 +14,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
-import com.javamonitor.mbeans.GarbageCollector;
 import com.javamonitor.mbeans.Server;
 import com.javamonitor.mbeans.Threading;
 
@@ -256,11 +255,6 @@ public class JmxHelper {
         return names;
     }
 
-    private static final GarbageCollector quickGc = new GarbageCollector(true);
-
-    private static final GarbageCollector thoroughGc = new GarbageCollector(
-            false);
-
     /**
      * Register the cool beans we need to find our way in the JMX jungle.
      * 
@@ -269,8 +263,6 @@ public class JmxHelper {
      */
     public static void registerCoolBeans() throws Exception {
         register(new Server(), Server.objectName);
-        register(quickGc, quickGc.getObjectName());
-        register(thoroughGc, thoroughGc.getObjectName());
         register(new Threading(), Threading.objectName);
     }
 
@@ -280,8 +272,6 @@ public class JmxHelper {
      */
     public static void unregisterCoolBeans() {
         unregister(Server.objectName);
-        unregister(quickGc.getObjectName());
-        unregister(thoroughGc.getObjectName());
         unregister(Threading.objectName);
     }
 
