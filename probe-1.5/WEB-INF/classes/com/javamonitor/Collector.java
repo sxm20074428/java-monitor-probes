@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import javax.management.ObjectName;
+
 import com.javamonitor.mbeans.Server;
 
 /**
@@ -101,24 +103,36 @@ final class Collector {
             final Item item = itemIterator.next();
 
             try {
-                final Object value = JmxHelper.query(item.getObjectName(), item
-                        .getAttribute());
-                if (value == null) {
-                    data.put(item.getId(), "|0|");
-                } else {
-                    data.put(item.getId(), value + "|" + getClassId(value)
-                            + "|");
-                }
+                int uniquefier = 0;
+                for (final ObjectName objectName : JmxHelper.queryNames(item
+                        .getObjectName())) {
+                    final String key = item.getId()
+                            + (uniquefier > 0 ? ":" + uniquefier : "");
+                    final String actualObjectName = item.getObjectName()
+                            .equals(objectName.toString()) ? "" : objectName
+                            .toString();
+                    final Object value = JmxHelper.query(objectName, item
+                            .getAttribute());
 
-                // only push static items once per session
-                if (!item.isPeriodic()) {
-                    itemIterator.remove();
+                    if (value == null) {
+                        data.put(key, "|0||" + actualObjectName);
+                    } else {
+                        data.put(key, value + "|" + getClassId(value) + "||"
+                                + actualObjectName);
+                    }
+
+                    uniquefier++;
                 }
             } catch (Exception e) {
                 final StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
                 data.put(item.getId(), "||" + e.getClass().getName() + ": "
-                        + sw.toString());
+                        + sw.toString() + "|");
+                itemIterator.remove();
+            }
+
+            // only push static items once per session
+            if (!item.isPeriodic()) {
                 itemIterator.remove();
             }
         }
