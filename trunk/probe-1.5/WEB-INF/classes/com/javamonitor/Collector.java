@@ -123,16 +123,16 @@ final class Collector {
 
                     uniquefier++;
                 }
+                
+                // only push static items once per session
+                if (!item.isPeriodic()) {
+                    itemIterator.remove();
+                }
             } catch (Exception e) {
                 final StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
                 data.put(item.getId(), "||" + e.getClass().getName() + ": "
                         + sw.toString() + "|");
-                itemIterator.remove();
-            }
-
-            // only push static items once per session
-            if (!item.isPeriodic()) {
                 itemIterator.remove();
             }
         }
