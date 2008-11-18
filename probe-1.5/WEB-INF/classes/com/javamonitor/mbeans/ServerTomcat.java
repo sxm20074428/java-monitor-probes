@@ -2,6 +2,7 @@ package com.javamonitor.mbeans;
 
 import java.util.Collection;
 
+import javax.management.AttributeNotFoundException;
 import javax.management.ObjectName;
 
 import com.javamonitor.JmxHelper;
@@ -81,15 +82,28 @@ final class ServerTomcat implements ServerMBean {
      * @see com.javamonitor.mbeans.ServerMBean#getName()
      */
     public String getName() throws Exception {
-        return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,
-                ATTRIBUTE_TOMCAT_SERVERINFO).replaceAll("/.*", "");
+        try {
+            return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,
+                    ATTRIBUTE_TOMCAT_SERVERINFO).replaceAll("/.*", "");
+        } catch (AttributeNotFoundException e) {
+            // hmm, it's an old version of Tomcat
+        }
+
+        return "Apache Tomcat";
     }
 
     /**
      * @see com.javamonitor.mbeans.ServerMBean#getVersion()
      */
+    @SuppressWarnings("unchecked")
     public String getVersion() throws Exception {
-        return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,
-                ATTRIBUTE_TOMCAT_SERVERINFO).replaceAll(".*/", "");
+        try {
+            return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,
+                    ATTRIBUTE_TOMCAT_SERVERINFO).replaceAll(".*/", "");
+        } catch (AttributeNotFoundException e) {
+            // hmm, it's an old version of Tomcat
+        }
+
+        return "older than 5.5.16";
     }
 }
