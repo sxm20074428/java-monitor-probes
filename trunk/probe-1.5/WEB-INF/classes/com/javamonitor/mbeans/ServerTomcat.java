@@ -37,7 +37,7 @@ final class ServerTomcat implements ServerMBean {
         Collection<ObjectName> processors = null;
         int slept = 0;
         do {
-            processors = JmxHelper.queryNames("Catalina:type=Connector,*");
+            processors = JmxHelper.queryNames("Catalina:type=ThreadPool,*");
             if (processors.size() < 1) {
                 try {
                     Thread.sleep(1000L);
@@ -54,7 +54,20 @@ final class ServerTomcat implements ServerMBean {
 
         int lowest = Integer.MAX_VALUE;
         for (final ObjectName processor : processors) {
-            lowest = Math.min(lowest, JmxHelper.queryInt(processor, "port"));
+            final String name = processor.toString();
+            if (name.contains("http")) {
+                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
+                        ".*-", "")));
+            }
+        }
+
+        // maybe there are no HTTP connectors?
+        if (lowest == Integer.MAX_VALUE) {
+            for (final ObjectName processor : processors) {
+                final String name = processor.toString();
+                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
+                        ".*-", "")));
+            }
         }
 
         if (lowest == Integer.MAX_VALUE) {

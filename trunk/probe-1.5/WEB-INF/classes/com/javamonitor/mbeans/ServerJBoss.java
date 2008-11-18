@@ -48,9 +48,19 @@ public class ServerJBoss implements ServerMBean {
 
         int lowest = Integer.MAX_VALUE;
         for (final ObjectName processor : processors) {
-            if (JmxHelper.queryString(processor, "name").startsWith("http")) {
-                lowest = Math
-                        .min(lowest, JmxHelper.queryInt(processor, "port"));
+            final String name = processor.toString();
+            if (name.contains("http")) {
+                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
+                        ".*-", "")));
+            }
+        }
+
+        // maybe there are no HTTP connectors?
+        if (lowest == Integer.MAX_VALUE) {
+            for (final ObjectName processor : processors) {
+                final String name = processor.toString();
+                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
+                        ".*-", "")));
             }
         }
 
