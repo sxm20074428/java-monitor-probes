@@ -5,6 +5,8 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.javamonitor.JmxHelper;
 
@@ -97,5 +99,88 @@ public class Threading implements ThreadingMBean {
                 + thread.getLockName() + ", owned by "
                 + thread.getLockOwnerName() + ", id " + thread.getLockOwnerId()
                 + "\n" + trace + "\n\n" + stacktraces(threads, i + 1);
+    }
+
+    /**
+     * We keep track of the last time we sampled the thread states. It is a
+     * crude optimisation to avoid having to query for the threads states versy
+     * often.
+     */
+    private long lastSampled = 0L;
+
+    private final Map<Thread.State, Integer> states = new HashMap<Thread.State, Integer>();
+
+    /**
+     * @see com.javamonitor.mbeans.ThreadingMBean#getThreadsBlocked()
+     */
+    public int getThreadsBlocked() {
+        sampleThreads();
+
+        return states.get(Thread.State.BLOCKED);
+    }
+
+    /**
+     * @see com.javamonitor.mbeans.ThreadingMBean#getThreadsNew()
+     */
+    public int getThreadsNew() {
+        sampleThreads();
+
+        return states.get(Thread.State.NEW);
+    }
+
+    /**
+     * @see com.javamonitor.mbeans.ThreadingMBean#getThreadsTerminated()
+     */
+    public int getThreadsTerminated() {
+        sampleThreads();
+
+        return states.get(Thread.State.TERMINATED);
+    }
+
+    /**
+     * @see com.javamonitor.mbeans.ThreadingMBean#getThreadsTimedWaiting()
+     */
+    public int getThreadsTimedWaiting() {
+        sampleThreads();
+
+        return states.get(Thread.State.TIMED_WAITING);
+    }
+
+    /**
+     * @see com.javamonitor.mbeans.ThreadingMBean#getThreadsWaiting()
+     */
+    public int getThreadsWaiting() {
+        sampleThreads();
+
+        return states.get(Thread.State.WAITING);
+    }
+
+    /**
+     * @see com.javamonitor.mbeans.ThreadingMBean#getThreadsRunnable()
+     */
+    public int getThreadsRunnable() {
+        sampleThreads();
+
+        return states.get(Thread.State.RUNNABLE);
+    }
+
+    private synchronized void sampleThreads() {
+        if ((lastSampled + 50L) < System.currentTimeMillis()) {
+            lastSampled = System.currentTimeMillis();
+            for (final Thread.State state : Thread.State.values()) {
+                states.put(state, 0);
+            }
+
+            for (final ThreadInfo thread : threadMXBean
+                    .getThreadInfo(threadMXBean.getAllThreadIds())) {
+                if (thread != null) {
+                    final Thread.State state = thread.getThreadState();
+                    states.put(state, states.get(state) + 1);
+                } else {
+                    states.put(Thread.State.TERMINATED, states
+                            .get(Thread.State.TERMINATED) + 1);
+                }
+            }
+        }
     }
 }
