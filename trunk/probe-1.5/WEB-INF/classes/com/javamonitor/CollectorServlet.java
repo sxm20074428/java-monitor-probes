@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServlet;
 public class CollectorServlet extends HttpServlet {
     private static final long serialVersionUID = 7230361089078209652L;
 
-    private static final long MINUTES = 60 * 1000;
+    private static final long MINUTES = 60L * 1000L;
 
     private static final Logger log = Logger.getLogger(CollectorServlet.class
             .getName());
@@ -74,6 +74,10 @@ public class CollectorServlet extends HttpServlet {
                     return; // bail out, this is going nowhere
                 }
 
+                // give the container around us a little time to start up and
+                // (more importantly) register its mbeans.
+                Thread.sleep(2000L);
+
                 for (;;) {
                     try {
                         for (;;) {
@@ -81,7 +85,7 @@ public class CollectorServlet extends HttpServlet {
                                 Collector.push(url);
                             }
 
-                            Thread.sleep(1 * MINUTES);
+                            Thread.sleep(1L * MINUTES);
                         }
                     } catch (InterruptedException e) {
                         throw e; // it ends up in the outer try block
