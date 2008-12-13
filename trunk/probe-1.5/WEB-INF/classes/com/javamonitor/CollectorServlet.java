@@ -23,6 +23,9 @@ public class CollectorServlet extends HttpServlet {
 
     private Thread collectorThread = null;
 
+    /**
+     * @see javax.servlet.GenericServlet#init()
+     */
     @Override
     public void init() throws ServletException {
         super.init();
@@ -38,6 +41,9 @@ public class CollectorServlet extends HttpServlet {
         collectorThread.start();
     }
 
+    /**
+     * @see javax.servlet.GenericServlet#destroy()
+     */
     @Override
     public void destroy() {
         collectorThread.interrupt();
@@ -67,7 +73,7 @@ public class CollectorServlet extends HttpServlet {
                                     + e.getMessage(), e);
                     return; // bail out, this is going nowhere
                 }
-                
+
                 for (;;) {
                     try {
                         for (;;) {

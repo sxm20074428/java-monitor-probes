@@ -93,8 +93,10 @@ final class Collector {
     }
 
     /**
-     * Push a list of items out to the server. As we go, we remove items that
-     * don't resolve to a value properly.
+     * Create a list of items to be pushed out to the server. As we go, we
+     * remove items that don't resolve to a value properly.
+     * 
+     * @return The data to be sent to the server.
      */
     private static Properties queryItems() {
         final Properties data = new Properties();
@@ -123,7 +125,7 @@ final class Collector {
 
                     uniquefier++;
                 }
-                
+
                 // only push static items once per session
                 if (!item.isPeriodic()) {
                     itemIterator.remove();
