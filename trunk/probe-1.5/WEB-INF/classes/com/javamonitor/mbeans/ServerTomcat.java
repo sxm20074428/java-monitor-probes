@@ -12,7 +12,7 @@ import com.javamonitor.JmxHelper;
  * 
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
-final class ServerTomcat implements ServerMBean {
+class ServerTomcat implements ServerMBean {
     private static final String ATTRIBUTE_TOMCAT_SERVERINFO = "serverInfo";
 
     private static final String OBJECTNAME_TOMCAT_SERVER = "Catalina:type=Server";
@@ -35,26 +35,27 @@ final class ServerTomcat implements ServerMBean {
      * @see com.javamonitor.mbeans.ServerMBean#getHttpPort()
      */
     public Integer getHttpPort() throws Exception {
-        Collection<ObjectName> processors = null;
+        Collection<ObjectName> threadpools = null;
         int slept = 0;
         do {
-            processors = JmxHelper.queryNames("Catalina:type=ThreadPool,*");
-            if (processors.size() < 1) {
+            threadpools = JmxHelper.queryNames("*:type=ThreadPool,*");
+            if (threadpools.size() < 1) {
                 try {
                     Thread.sleep(1000L);
                 } catch (InterruptedException e) {
                     // won't happen...
                 }
             }
-        } while (processors.size() < 1 && slept++ < 30);
+        } while (threadpools.size() < 1 && slept++ < 30);
 
-        if (processors.size() < 0) {
+        if (threadpools.size() < 0) {
             throw new IllegalStateException(
-                    "Tomcat connector MBeans were not loaded after 30 seconds, aborting");
+                    getName()
+                            + " threadpool MBeans were not loaded after 30 seconds, aborting");
         }
 
         int lowest = Integer.MAX_VALUE;
-        for (final ObjectName processor : processors) {
+        for (final ObjectName processor : threadpools) {
             final String name = processor.toString();
             if (name.contains("http")) {
                 lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
@@ -64,7 +65,7 @@ final class ServerTomcat implements ServerMBean {
 
         // maybe there are no HTTP connectors?
         if (lowest == Integer.MAX_VALUE) {
-            for (final ObjectName processor : processors) {
+            for (final ObjectName processor : threadpools) {
                 final String name = processor.toString();
                 lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
                         ".*-", "")));
@@ -95,7 +96,6 @@ final class ServerTomcat implements ServerMBean {
     /**
      * @see com.javamonitor.mbeans.ServerMBean#getVersion()
      */
-    @SuppressWarnings("unchecked")
     public String getVersion() throws Exception {
         try {
             return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,

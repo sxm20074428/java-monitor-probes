@@ -43,6 +43,8 @@ public class Server implements ServerMBean {
     public Server() {
         if (ServerJBoss.runningInJBoss()) {
             actualServer = new ServerJBoss();
+        } else if (ServerSpringDM.runningInSpringDM()) {
+            actualServer = new ServerSpringDM();
         } else if (ServerTomcat.runningInTomcat()) {
             actualServer = new ServerTomcat();
         } else {
