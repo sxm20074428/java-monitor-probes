@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.management.ObjectName;
@@ -169,12 +170,11 @@ final class Collector {
         if (response.get(SESSION) != null) {
             session = (String) response.remove(SESSION);
 
-            for (final Object key : response.keySet()) {
-                final String[] parts = ((String) response.get(key))
-                        .split("\\|");
+            for (final Map.Entry<Object, Object> entry : response.entrySet()) {
+                final String[] parts = ((String) entry.getValue()).split("\\|");
 
-                items.add(new Item(key.toString(), parts[0], parts[1], Boolean
-                        .parseBoolean(parts[2])));
+                items.add(new Item(entry.getKey().toString(), parts[0],
+                        parts[1], Boolean.parseBoolean(parts[2])));
             }
 
             return true;
