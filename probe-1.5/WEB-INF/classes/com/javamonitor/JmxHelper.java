@@ -261,7 +261,7 @@ public class JmxHelper {
      * @throws Exception
      *             When we could not register one or more beans.
      */
-    public static void registerCoolBeans() throws Exception {
+    public static void registerCoolMBeans() throws Exception {
         register(new Server(), Server.objectName);
         register(new Threading(), Threading.objectName);
     }
@@ -270,7 +270,7 @@ public class JmxHelper {
      * Unregister all the useful mbeans from the JMX registry. We assume that
      * the registered bean was registered in the platform mbean server.
      */
-    public static void unregisterCoolBeans() {
+    public static void unregisterCoolMBeans() {
         unregister(Server.objectName);
         unregister(Threading.objectName);
     }

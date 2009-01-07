@@ -31,7 +31,7 @@ public class CollectorServlet extends HttpServlet {
         super.init();
 
         try {
-            JmxHelper.registerCoolBeans();
+            JmxHelper.registerCoolMBeans();
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -53,7 +53,7 @@ public class CollectorServlet extends HttpServlet {
             // ignore, we're going down anyway
         }
 
-        JmxHelper.unregisterCoolBeans();
+        JmxHelper.unregisterCoolMBeans();
 
         super.destroy();
     }
