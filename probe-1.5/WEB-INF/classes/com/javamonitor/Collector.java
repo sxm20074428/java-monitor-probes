@@ -8,8 +8,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,6 +28,8 @@ import com.javamonitor.mbeans.Server;
  */
 final class Collector {
     private static String account = null;
+
+    private static String localIp = null;
 
     private static String lowestPort = null;
 
@@ -53,27 +56,69 @@ final class Collector {
      *             When there was a problem.
      */
     public static boolean push(final URL url) throws Exception, OnHoldException {
-        init();
+        try {
+            init(url);
 
-        final Properties request = queryItems();
-        request.put("account", account);
-        request.put("localIp", InetAddress.getLocalHost().getHostAddress());
-        if (lowestPort != null) {
-            request.put("lowestPort", lowestPort);
-        }
-        if (appserver != null) {
-            request.put("appserver", appserver);
-        }
-        if (session != null) {
-            request.put(SESSION, session);
-        }
+            final Properties request = queryItems();
+            request.put("account", account);
+            request.put("localIp", localIp);
+            if (lowestPort != null) {
+                request.put("lowestPort", lowestPort);
+            }
+            if (appserver != null) {
+                request.put("appserver", appserver);
+            }
+            if (session != null) {
+                request.put(SESSION, session);
+            }
 
-        final Properties response = push(url, request);
+            final Properties response = push(url, request);
 
-        return parse(response);
+            return parse(response);
+        } catch (OnHoldException e) {
+            session = null;
+            throw e;
+        } catch (Exception e) {
+            session = null;
+            throw e;
+        }
     }
 
-    private static void init() throws Exception {
+    /**
+     * Retrieve the local IP address. If we just used InetAddress.getLocalhost()
+     * we end up with 127.0.0.1 in many cases, so instead we open a connection
+     * to the Java-monitor servers and use the local IP address of that
+     * connection.
+     * <p>
+     * We do not reuse the connection, because the JVM may be running on a
+     * laptop that moves from network to network.
+     * 
+     * @param url
+     *            The url to base the test off of.
+     * @return The local IP address of this JVM.
+     * @throws UnknownHostException
+     *             When we could not determine the local IP address.
+     * @throws IOException
+     *             When we could not determine the local IP address.
+     */
+    private static String getLocalIp(final URL url)
+            throws UnknownHostException, IOException {
+        Socket s = null;
+        try {
+            s = new Socket(url.getHost(), 80);
+            return s.getLocalAddress().getHostAddress();
+        } finally {
+            if (s != null) {
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    // ignore errors here...
+                }
+            }
+        }
+    }
+
+    private static void init(final URL url) throws Exception {
         if (account == null) {
             BufferedReader in = null;
             try {
@@ -90,6 +135,10 @@ final class Collector {
                     Server.httpPortAttribute);
             appserver = JmxHelper.queryString(Server.objectName,
                     Server.nameAttribute);
+        }
+
+        if (localIp == null) {
+            localIp = getLocalIp(url);
         }
     }
 
