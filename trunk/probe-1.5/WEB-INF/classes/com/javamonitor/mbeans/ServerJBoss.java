@@ -33,6 +33,10 @@ final class ServerJBoss extends ServerTomcat {
      */
     @Override
     public String getVersion() throws Exception {
-        return JmxHelper.queryString(OBJECTNAME_JBOSS_SERVER, "VersionNumber");
+        return JmxHelper.queryString(OBJECTNAME_JBOSS_SERVER, "Version")
+                .replaceAll("\\(.*", "").trim()
+                + " ("
+                + JmxHelper.queryString(OBJECTNAME_JBOSS_SERVER, "VersionName")
+                + ")";
     }
 }
