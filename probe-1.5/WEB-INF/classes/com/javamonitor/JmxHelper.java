@@ -14,6 +14,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
+import com.javamonitor.mbeans.DNSCachePolicy;
 import com.javamonitor.mbeans.Server;
 import com.javamonitor.mbeans.Threading;
 
@@ -264,6 +265,7 @@ public class JmxHelper {
     public static void registerCoolMBeans() throws Exception {
         register(new Server(), Server.objectName);
         register(new Threading(), Threading.objectName);
+        register(new DNSCachePolicy(), DNSCachePolicy.objectName);
     }
 
     /**
@@ -273,6 +275,7 @@ public class JmxHelper {
     public static void unregisterCoolMBeans() {
         unregister(Server.objectName);
         unregister(Threading.objectName);
+        unregister(DNSCachePolicy.objectName);
     }
 
     private static void unregister(final String objectName) {
