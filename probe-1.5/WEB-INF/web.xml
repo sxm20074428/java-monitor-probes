@@ -5,7 +5,7 @@
 		<servlet-class>com.javamonitor.CollectorServlet</servlet-class>
 		<init-param>
 			<param-name>url</param-name>
-			<param-value>http://java-monitor.com/lemongrass/1.0/push</param-value>
+			<param-value>http://194.109.206.50/lemongrass/1.0/push</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
