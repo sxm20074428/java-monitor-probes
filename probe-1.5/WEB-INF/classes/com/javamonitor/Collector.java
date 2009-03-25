@@ -27,37 +27,51 @@ import com.javamonitor.mbeans.Server;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 final class Collector {
-    private static String account = null;
+    private final URL url;
 
-    private static String localIp = null;
+    private String account = null;
 
-    private static String lowestPort = null;
+    private String localIp = null;
 
-    private static String session = null;
+    private String lowestPort = null;
 
-    private static String appserver = null;
+    private String session = null;
 
-    private static final Collection<Item> items = new LinkedList<Item>();
+    private String appserver = null;
+
+    private final Collection<Item> items = new LinkedList<Item>();
+
+    /**
+     * Create a new collector.
+     * 
+     * @param url
+     *            The URL to push to.
+     * @param uniqueId
+     *            The unique ID to use instead of port number, or
+     *            <code>null</code> to use the port number.
+     */
+    Collector(final URL url, final Integer uniqueId) {
+        this.url = url;
+        if (uniqueId != null) {
+            lowestPort = uniqueId.toString();
+        }
+    }
 
     /**
      * Sign in with the collector server and ask for permission to send
      * statistics.
      * 
-     * @param url
-     *            The URL to push to.
      * @return <code>true</code> if the configuration was stale and we need to
      *         reconfigure. <code>false</code> if we may just reuse the
      *         existing list.
-     * @throws IOException
-     *             When there was a problem accessing the environment.
      * @throws OnHoldException
      *             When we were put on hold by the server.
      * @throws Exception
      *             When there was a problem.
      */
-    public static boolean push(final URL url) throws Exception, OnHoldException {
+    boolean push() throws Exception, OnHoldException {
         try {
-            init(url);
+            init();
 
             final Properties request = queryItems();
             request.put("account", account);
@@ -118,7 +132,7 @@ final class Collector {
         }
     }
 
-    private static void init(final URL url) throws Exception {
+    private void init() throws Exception {
         if (account == null) {
             BufferedReader in = null;
             try {
@@ -131,8 +145,10 @@ final class Collector {
                 }
             }
 
-            lowestPort = JmxHelper.queryString(Server.objectName,
-                    Server.httpPortAttribute);
+            if (lowestPort == null) {
+                lowestPort = JmxHelper.queryString(Server.objectName,
+                        Server.httpPortAttribute);
+            }
             appserver = JmxHelper.queryString(Server.objectName,
                     Server.nameAttribute);
         }
@@ -148,7 +164,7 @@ final class Collector {
      * 
      * @return The data to be sent to the server.
      */
-    private static Properties queryItems() {
+    private Properties queryItems() {
         final Properties data = new Properties();
         final Iterator<Item> itemIterator = items.iterator();
         while (itemIterator.hasNext()) {
@@ -210,8 +226,7 @@ final class Collector {
 
     private static final String SESSION = "session";
 
-    private static boolean parse(final Properties response)
-            throws OnHoldException {
+    private boolean parse(final Properties response) throws OnHoldException {
         if (response.get(ONHOLD) != null) {
             throw new OnHoldException((String) response.get(ONHOLD));
         }
