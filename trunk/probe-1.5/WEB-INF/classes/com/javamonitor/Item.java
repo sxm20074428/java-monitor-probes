@@ -27,8 +27,8 @@ final class Item {
      * @param periodic
      *            A flag that says if this is a periodic item.
      */
-    public Item(final String id, final String objectName,
-            final String attribute, final boolean periodic) {
+    Item(final String id, final String objectName, final String attribute,
+            final boolean periodic) {
         this.id = id;
         this.objectName = objectName;
         this.attribute = attribute;
@@ -40,7 +40,7 @@ final class Item {
      * 
      * @return The ID of the item.
      */
-    public String getId() {
+    String getId() {
         return id;
     }
 
@@ -49,7 +49,7 @@ final class Item {
      * 
      * @return The JMX object name of the item.
      */
-    public String getObjectName() {
+    String getObjectName() {
         return objectName;
     }
 
@@ -58,7 +58,7 @@ final class Item {
      * 
      * @return The monitored attribute.
      */
-    public String getAttribute() {
+    String getAttribute() {
         return attribute;
     }
 
@@ -68,7 +68,7 @@ final class Item {
      * @return <code>true</code> if this is a periodic item, or
      *         <code>false</code> if it lives as long as a JVM.
      */
-    public boolean isPeriodic() {
+    boolean isPeriodic() {
         return periodic;
     }
 }

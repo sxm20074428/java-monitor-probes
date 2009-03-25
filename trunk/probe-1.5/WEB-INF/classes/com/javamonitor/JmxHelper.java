@@ -91,15 +91,18 @@ public class JmxHelper {
      *            The mbean to register.
      * @param objectNameString
      *            The object name to register it under.
-     * @throws Exception
-     *             When we could not register the mbean.
      */
     private static void register(final Object mbean,
-            final String objectNameString) throws Exception {
+            final String objectNameString) {
         unregister(objectNameString);
 
-        ManagementFactory.getPlatformMBeanServer().registerMBean(mbean,
-                new ObjectName(objectNameString));
+        try {
+            ManagementFactory.getPlatformMBeanServer().registerMBean(mbean,
+                    new ObjectName(objectNameString));
+        } catch (Exception e) {
+            // sshhh, this kind of stuff happens and we don't want to bother the
+            // admin with it.
+        }
     }
 
     /**
@@ -258,11 +261,8 @@ public class JmxHelper {
 
     /**
      * Register the cool beans we need to find our way in the JMX jungle.
-     * 
-     * @throws Exception
-     *             When we could not register one or more beans.
      */
-    public static void registerCoolMBeans() throws Exception {
+    public static void registerCoolMBeans() {
         register(new Server(), Server.objectName);
         register(new Threading(), Threading.objectName);
         register(new DNSCachePolicy(), DNSCachePolicy.objectName);
