@@ -41,7 +41,9 @@ public class Server implements ServerMBean {
      * detect the outer server, not the embedded Tomcat.
      */
     public Server() {
-        if (ServerJBoss.runningInJBoss()) {
+        if (ServerGlassfish.runningInGlassfish()) {
+            actualServer = new ServerGlassfish();
+        } else if (ServerJBoss.runningInJBoss()) {
             actualServer = new ServerJBoss();
         } else if (ServerSpringDM.runningInSpringDM()) {
             actualServer = new ServerSpringDM();
