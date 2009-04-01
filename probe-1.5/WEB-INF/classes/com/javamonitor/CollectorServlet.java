@@ -20,8 +20,7 @@ public class CollectorServlet extends HttpServlet {
     public void init() throws ServletException {
         super.init();
 
-        collector = new JavaMonitorCollector(getServletConfig()
-                .getInitParameter("url"));
+        collector = new JavaMonitorCollector();
         collector.start();
     }
 
