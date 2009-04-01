@@ -18,25 +18,29 @@ public class Launcher {
      */
     public static void main(final String args[]) throws InterruptedException {
         //
-        // Create a new collector, specifying the Java-monitor collector server
-        // URL and a unique application ID.
-        //
-        // The URL can be overridden from the command line by specifying the
-        // system property javamonitor.url. The command line option takes
-        // precedence over the hardcoded one.
+        // Create a new collector, specifying a unique application ID.
+        // 
+        // Don't read anyting in the number, it is just something I made up. You
+        // can just pick anything you like. As long as you have a different one
+        // for each application that runs on your machine.
         //
         // The unique ID identifies this JVM on the machine if you have more
         // than one. This ID can be overridden on the command line using the
         // system property javamonitor.uniqueid.
         //
+        // If you run the applicaiton inside Tomcat, JBoss or SpringSource DM
+        // Server, you can leave the number out. The probe will then pick one
+        // for you.
+        //
         final JavaMonitorCollector collector = new JavaMonitorCollector(
-                "http://194.109.206.50/lemongrass/1.0/push", 2143);
+                21435489);
 
         // start the collector...
         collector.start();
 
-        // sleep for a bit, to see the results...
-        Thread.sleep(1000000);
+        // sleep for a bit, go to http://java-monitor.com/forum/ to see the
+        // collected data...
+        Thread.sleep(1000000L);
 
         // and finally clean up.
         collector.stop();

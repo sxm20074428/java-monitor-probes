@@ -36,13 +36,15 @@ public class JavaMonitorCollector {
      * applicable.
      */
     public JavaMonitorCollector() {
-        this((String) null, null);
+        this(null);
     }
 
     /**
-     * Create a new Java-monitor collector, specifying a unique ID. This
-     * collector requires the URL to be specified using the system property
-     * &quot;javamonitor.url&quot;.
+     * Create a new Java-monitor collector, specifying a unique ID for this
+     * application.
+     * <p>
+     * The collector URL may be overridden from the command line using the
+     * system property &quot;javamonitor.url&quot;.
      * <p>
      * The unique ID may be overridden from the command line using the system
      * property &quot;javamonitor.uniqueid&quot;.
@@ -52,93 +54,14 @@ public class JavaMonitorCollector {
      *            property &quot;javamonitor.uniqueid&quot; is not set.
      */
     public JavaMonitorCollector(final Integer uniqueId) {
-        this((String) null, uniqueId);
-    }
-
-    /**
-     * Create a new Java-monitor collector, specifyling what collector URL to
-     * use. The collector URL may be overridden from the command line using the
-     * system property &quot;javamonitor.url&quot;.
-     * <p>
-     * If specified, it will use the value from system property
-     * &quot;javamonitor.uniqueid&quot; as the unique ID for this applicaiton.
-     * Failing that, it will use the MBeans to find the lowest port number, if
-     * applicable.
-     * 
-     * @param defaultUrl
-     *            The default collector URL, in case the system property
-     *            &quot;javamonitor.url&quot; is not set.
-     */
-    public JavaMonitorCollector(final String defaultUrl) {
-        this(defaultUrl, null);
-    }
-
-    /**
-     * Create a new Java-monitor collector, specifyling what collector URL to
-     * use. The collector URL may be overridden from the command line using the
-     * system property &quot;javamonitor.url&quot;.
-     * <p>
-     * If specified, it will use the value from system property
-     * &quot;javamonitor.uniqueid&quot; as the unique ID for this applicaiton.
-     * Failing that, it will use the MBeans to find the lowest port number, if
-     * applicable.
-     * 
-     * @param defaultUrl
-     *            The default collector URL, in case the system property
-     *            &quot;javamonitor.url&quot; is not set.
-     */
-    public JavaMonitorCollector(final URL defaultUrl) {
-        this(defaultUrl == null ? (String) null : defaultUrl.toString(), null);
-    }
-
-    /**
-     * Create a new Java-monitor collector, specifyling what collector URL to
-     * use. The collector URL may be overridden from the command line using the
-     * system property &quot;javamonitor.url&quot;.
-     * <p>
-     * The unique ID may be overridden from the command line using the system
-     * property &quot;javamonitor.uniqueid&quot;.
-     * 
-     * @param defaultUrl
-     *            The default collector URL, in case the system property
-     *            &quot;javamonitor.url&quot; is not set.
-     * @param uniqueId
-     *            The unique ID to use for this application, in case system
-     *            property &quot;javamonitor.uniqueid&quot; is not set.
-     */
-    public JavaMonitorCollector(final URL defaultUrl, Integer uniqueId) {
-        this(defaultUrl == null ? (String) null : defaultUrl.toString(),
-                uniqueId);
-    }
-
-    /**
-     * Create a new Java-monitor collector, specifyling what collector URL to
-     * use. The collector URL may be overridden from the command line using the
-     * system property &quot;javamonitor.url&quot;.
-     * <p>
-     * The unique ID may be overridden from the command line using the system
-     * property &quot;javamonitor.uniqueid&quot;.
-     * 
-     * @param defaultUrl
-     *            The default collector URL, in case the system property
-     *            &quot;javamonitor.url&quot; is not set.
-     * @param uniqueId
-     *            The unique ID to use for this application, in case system
-     *            property &quot;javamonitor.uniqueid&quot; is not set.
-     */
-    public JavaMonitorCollector(final String defaultUrl, final Integer uniqueId) {
+        final String urlString = System.getProperty(JAVA_MONITOR_URL,
+                "http://194.109.206.50/lemongrass/1.0/push");
         URL url = null;
-        if (defaultUrl == null && System.getProperty(JAVA_MONITOR_URL) == null) {
-            log.log(Level.SEVERE,
-                    "null URL for Java-monitor probe, please set system property '"
-                            + JAVA_MONITOR_URL + "'");
-        } else {
-            try {
-                url = new URL(System.getProperty(JAVA_MONITOR_URL, defaultUrl));
-            } catch (MalformedURLException e) {
-                log.log(Level.SEVERE, "unable to parse '" + defaultUrl
-                        + "' into a URL: " + e.getMessage(), e);
-            }
+        try {
+            url = new URL(urlString);
+        } catch (MalformedURLException e) {
+            log.log(Level.SEVERE, "unable to parse '" + urlString
+                    + "' into a URL: " + e.getMessage(), e);
         }
 
         Integer id = uniqueId;
