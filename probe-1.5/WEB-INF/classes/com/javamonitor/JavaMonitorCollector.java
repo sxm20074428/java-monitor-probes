@@ -76,14 +76,13 @@ public class JavaMonitorCollector {
         }
 
         if (url != null) {
-            collector = new Collector(url, uniqueId);
+            collector = new Collector(url, id);
             collectorThread = new Thread(new CollectorDriver(),
                     "java-monitor collector");
         } else {
             collector = null;
             collectorThread = null;
         }
-
     }
 
     /**
