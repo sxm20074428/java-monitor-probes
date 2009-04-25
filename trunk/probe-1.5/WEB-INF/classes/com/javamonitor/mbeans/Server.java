@@ -49,6 +49,10 @@ public class Server implements ServerMBean {
             actualServer = new ServerSpringDM();
         } else if (ServerTomcat.runningInTomcat()) {
             actualServer = new ServerTomcat();
+        } else if (ServerJetty5.runningInJetty5()) {
+            actualServer = new ServerJetty5();
+        } else if (ServerJetty.runningInJetty()) {
+            actualServer = new ServerJetty();
         } else {
             actualServer = null;
         }
