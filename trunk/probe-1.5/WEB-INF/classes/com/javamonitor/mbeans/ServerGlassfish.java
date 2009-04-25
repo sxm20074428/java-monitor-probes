@@ -63,8 +63,8 @@ final class ServerGlassfish implements ServerMBean {
         }
 
         int lowest = Integer.MAX_VALUE;
-        for (final ObjectName processor : selectors) {
-            final String name = processor.toString();
+        for (final ObjectName selector : selectors) {
+            final String name = selector.toString();
             if (name.contains("http")) {
                 lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
                         "[^0-9]", "")));
@@ -73,8 +73,8 @@ final class ServerGlassfish implements ServerMBean {
 
         // maybe there are no HTTP connectors?
         if (lowest == Integer.MAX_VALUE) {
-            for (final ObjectName processor : selectors) {
-                final String name = processor.toString();
+            for (final ObjectName selector : selectors) {
+                final String name = selector.toString();
                 lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
                         "[0-9]", "")));
             }
