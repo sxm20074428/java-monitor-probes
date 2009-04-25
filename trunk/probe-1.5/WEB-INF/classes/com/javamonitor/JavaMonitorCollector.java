@@ -142,9 +142,9 @@ public class JavaMonitorCollector {
                         log
                                 .log(
                                         Level.SEVERE,
-                                        "This probe was hit by an unexpected exception (it will retry in fifteen minutes): "
+                                        "This probe was hit by an unexpected exception (it will retry in five minutes): "
                                                 + e.getMessage(), e);
-                        Thread.sleep(15 * MINUTES);
+                        Thread.sleep(5L * MINUTES);
                         log.log(Level.INFO, "resuming operation");
                     }
                 }
