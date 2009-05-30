@@ -247,6 +247,13 @@ final class Collector {
         return false;
     }
 
+    /**
+     * We set the timeout on the connection to be a few minutes. This way we are
+     * robust against network issues that cause probes to wait for data
+     * indefiniedly.
+     */
+    private static final int TWO_MINUTES = 2 * 60 * 1000;
+
     private static Properties push(final URL url, final Properties request)
             throws IOException {
         HttpURLConnection connection = null;
@@ -256,6 +263,9 @@ final class Collector {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
+            connection.setConnectTimeout(TWO_MINUTES);
+            connection.setReadTimeout(TWO_MINUTES);
+
             out = new PrintStream(connection.getOutputStream());
             request.storeToXML(out, null);
             out.flush();
