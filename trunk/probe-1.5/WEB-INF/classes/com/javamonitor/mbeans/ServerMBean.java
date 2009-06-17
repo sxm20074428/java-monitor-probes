@@ -26,9 +26,12 @@ public interface ServerMBean {
 
     /**
      * The lowest HTTP port in use in this application server that we run in.
+     * Actually, this is a bit of a misnomer. Not all servers are HTTP servers.
+     * For example, we support the Openfire XMPP server, which only uses HTTP
+     * for configuration and not for actual services to clients.
      * 
-     * @return The lowest HTTP port in use in this application server, or -1 if
-     *         no port is known.
+     * @return The lowest service port in use in this application server, or -1
+     *         if no port is known.
      * @throws Exception
      *             When there was a problem querying JMX.
      */

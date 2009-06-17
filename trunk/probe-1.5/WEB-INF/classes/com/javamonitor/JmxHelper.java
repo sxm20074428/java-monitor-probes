@@ -92,7 +92,7 @@ public class JmxHelper {
      * @param objectNameString
      *            The object name to register it under.
      */
-    private static void register(final Object mbean,
+    public static void register(final Object mbean,
             final String objectNameString) {
         unregister(objectNameString);
 
@@ -139,6 +139,24 @@ public class JmxHelper {
             final String attribute) throws Exception {
         final Object value = query(objectName, attribute);
         return value == null ? null : value.toString();
+    }
+
+    /**
+     * Query for an integer, based on the object name. Convenience method that
+     * does the casts.
+     * 
+     * @param objectName
+     *            The object name to query.
+     * @param attribute
+     *            The attribute to query.
+     * @return The value of the attribute, as string.
+     * @throws Exception
+     *             When there was a problem querying.
+     */
+    public static Integer queryInt(final String objectName,
+            final String attribute) throws Exception {
+        final Object value = query(objectName, attribute);
+        return value == null ? null : Integer.parseInt(value.toString());
     }
 
     /**
@@ -270,7 +288,7 @@ public class JmxHelper {
 
     /**
      * Unregister all the useful mbeans from the JMX registry. We assume that
-     * the registered bean was registered in the platform mbean server.
+     * the registered beans were registered in the platform mbean server.
      */
     public static void unregisterCoolMBeans() {
         unregister(Server.objectName);
@@ -278,7 +296,15 @@ public class JmxHelper {
         unregister(DNSCachePolicy.objectName);
     }
 
-    private static void unregister(final String objectName) {
+    /**
+     * Unregister an MBean, suppressing all errors that may arise. Good for
+     * making sure a bean really is not there. We assume that the registered
+     * bean was registered in the platform mbean server.
+     * 
+     * @param objectName
+     *            The object name of the MBean to unregister.
+     */
+    public static void unregister(final String objectName) {
         try {
             ManagementFactory.getPlatformMBeanServer().unregisterMBean(
                     new ObjectName(objectName));

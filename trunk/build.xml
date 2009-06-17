@@ -6,24 +6,18 @@
     <property name="lib" location="${basedir}/lib" />
     
     <property name="dist" location="${basedir}/dist" />
-    <target name="all">
-        <!-- TODO define script. See Help menu or http://ant.apache.org/ -->
-    </target>
-    
-    <target name="dist">
-        
+	
+    <target name="all" depends="compile15">
     </target>
     
     <target name="compile15">
-        <javac srcdir="${src}" destdir="${bin}" debug="true" fork="true" failonerror="true">
+        <javac srcdir="${src}" destdir="${bin}" debug="true" fork="true" failonerror="true"
+    		target="1.5" source="1.5">
             <classpath>
                 <pathelement location="${lib}/servlet-api.jar" />
+                <pathelement location="${lib}/openfire.jar" />
             </classpath>
         </javac>
-    </target>
-    
-    <target name="compile14">
-        
     </target>
     
     <target name="package" depends="compile15">
