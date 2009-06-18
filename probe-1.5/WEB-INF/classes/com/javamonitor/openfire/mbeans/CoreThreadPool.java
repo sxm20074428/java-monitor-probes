@@ -7,7 +7,7 @@ import org.apache.mina.management.MINAStatCollector;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 
 /**
- * A core therad pool mbean implementation.
+ * A core thread pool mbean implementation.
  * 
  * @author Guus der Kinderen, guus.der.kinderen@gmail.com
  */
@@ -34,10 +34,16 @@ public class CoreThreadPool implements CoreThreadPoolMBean {
         this.mina = new MINAStatCollector(acceptor);
     }
 
+    /**
+     * Start collecting statistics from this pool.
+     */
     public void start() {
         mina.start();
     }
 
+    /**
+     * Stop collecting statistics from this pool.
+     */
     public void stop() {
         mina.stop();
     }
