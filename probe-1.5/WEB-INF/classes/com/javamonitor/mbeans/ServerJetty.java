@@ -42,13 +42,15 @@ final class ServerJetty implements ServerMBean {
      * @see com.javamonitor.mbeans.ServerMBean#getHttpPort()
      */
     public Integer getHttpPort() throws Exception {
-        // XXX fopr Jetty 7, see http://jira.codehaus.org/browse/JETTY-976
-        System.err.println(((ObjectName[])JmxHelper.query(OBJECTNAME_JETTY_SERVER, "connectors"))[0]);
-        
+        // XXX for Jetty 7, see http://jira.codehaus.org/browse/JETTY-976
+        // System.err.println(((ObjectName[])JmxHelper.query(OBJECTNAME_JETTY_SERVER,
+        // "connectors"))[0]);
+
         Collection<ObjectName> selectors = null;
         int slept = 0;
         do {
-            selectors = JmxHelper.queryNames("org.mortbay.jetty.nio:type=selectchannelconnector,*");
+            selectors = JmxHelper
+                    .queryNames("org.mortbay.jetty.nio:type=selectchannelconnector,*");
             if (selectors.size() < 1) {
                 try {
                     Thread.sleep(1000L);
