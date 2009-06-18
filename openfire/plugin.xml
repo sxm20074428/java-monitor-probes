@@ -2,8 +2,8 @@
 
 <plugin>
     <class>com.javamonitor.openfire.JavaMonitorPlugin</class>
-    <name>javaMonitor</name>
-    <description>Provides monitoring data for the java-monitor.com service.</description>
+    <name>java-monitor</name>
+    <description>Provides monitoring data for the Java-monitor service.</description>
     <author>java-monitor.com</author>
     <version>1.0</version>
     <date>9 june 2009</date>
