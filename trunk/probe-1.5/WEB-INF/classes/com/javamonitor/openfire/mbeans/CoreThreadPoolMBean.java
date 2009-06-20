@@ -11,35 +11,35 @@ public interface CoreThreadPoolMBean {
      * @see java.util.concurrent.ThreadPoolExecutor#getCorePoolSize()
      * @return the core number of threads
      */
-    public int getCorePoolSize();
+    int getCorePoolSize();
 
-    public int getMaximumPoolSize();
+    int getMaximumPoolSize();
 
-    public int getActiveCount();
+    int getActiveCount();
 
-    public int getQueueSize();
+    int getQueueSize();
 
-    public long getCompletedTaskCount();
+    long getCompletedTaskCount();
 
-    public int getLargestPoolSize();
+    int getLargestPoolSize();
 
-    public int getPoolSize();
+    int getPoolSize();
 
-    public long getTaskCount();
+    long getTaskCount();
 
-    public long getMinaBytesRead();
+    long getMinaBytesRead();
 
-    public long getMinaBytesWritten();
+    long getMinaBytesWritten();
 
-    public long getMinaMsgRead();
+    long getMinaMsgRead();
 
-    public long getMinaMsgWritten();
+    long getMinaMsgWritten();
 
-    public long getMinaQueuedEvents();
+    long getMinaQueuedEvents();
 
-    public long getMinaScheduledWrites();
+    long getMinaScheduledWrites();
 
-    public long getMinaSessionCount();
+    long getMinaSessionCount();
 
-    public long getMinaTotalProcessedSessions();
+    long getMinaTotalProcessedSessions();
 }

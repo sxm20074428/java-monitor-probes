@@ -2,7 +2,6 @@ package com.javamonitor.openfire;
 
 import java.io.File;
 
-import org.jivesoftware.openfire.ServerPort;
 import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.container.Plugin;
 import org.jivesoftware.openfire.container.PluginManager;
@@ -33,24 +32,22 @@ public class JavaMonitorPlugin implements Plugin {
      */
     public final static String OBJECTNAME_OPENFIRE = NAMEBASE + "type=Openfire";
 
+    private Openfire openfire = null;
+
     private final static String OBJECTNAME_PACKET_COUNTER = NAMEBASE
             + "type=packetCounter";
 
-    private final static String OBJECTNAME_DATABASEPOOL = NAMEBASE
-            + "type=databasepool";
+    private PacketCounter packetCounter = null;
 
     private final static String OBJECTNAME_CORE_CLIENT_THREADPOOL = NAMEBASE
             + "type=coreThreadpool,poolname=client";
 
-    private final Openfire openfire = new Openfire();
+    private CoreThreadPool client = null;
 
-    private final PacketCounter packetCounter = new PacketCounter();
+    private final static String OBJECTNAME_DATABASEPOOL = NAMEBASE
+            + "type=databasepool";
 
-    private final DatabasePool database = new DatabasePool();
-
-    private final CoreThreadPool client = new CoreThreadPool(
-            ((ConnectionManagerImpl) XMPPServer.getInstance()
-                    .getConnectionManager()).getSocketAcceptor());
+    private DatabasePool database = null;
 
     private JavaMonitorCollector collector = null;
 
@@ -59,52 +56,53 @@ public class JavaMonitorPlugin implements Plugin {
      *      .openfire.container.PluginManager, java.io.File)
      */
     public void initializePlugin(PluginManager manager, File pluginDirectory) {
-        Log.info("Start collecting data");
+        Log.info("Start collecting data for Java-monitor.");
 
-        Log.debug("... starting openfire ...");
-        openfire.start();
-        JmxHelper.register(openfire, OBJECTNAME_OPENFIRE);
+        try {
+            openfire = new Openfire();
+            openfire.start();
+            JmxHelper.register(openfire, OBJECTNAME_OPENFIRE);
 
-        Log.debug("... starting stanza counter ...");
-        packetCounter.start();
-        JmxHelper.register(packetCounter, OBJECTNAME_PACKET_COUNTER);
-
-        Log.debug("... starting core client threadpool stats collector ...");
-        client.start();
-        JmxHelper.register(client, OBJECTNAME_CORE_CLIENT_THREADPOOL);
-
-        Log.debug("... exposing database-pool stats ...");
-        database.start();
-        JmxHelper.register(database, OBJECTNAME_DATABASEPOOL);
-
-        Log
-                .debug("Activate the java-monitor collector that forwards data to that service.");
-        // use the lowest server port to uniquely identify this instance on this
-        // host. Prefer client ports.
-        int lowestClientPort = Integer.MAX_VALUE;
-        int lowestPort = Integer.MAX_VALUE;
-        for (final ServerPort port : XMPPServer.getInstance().getServerInfo()
-                .getServerPorts()) {
-            final int number = port.getPort();
-
-            if (number < lowestPort) {
-                lowestPort = number;
-            }
-
-            if (ServerPort.Type.client.equals(port.getType())
-                    && number < lowestClientPort) {
-                lowestClientPort = number;
-            }
+            Log.debug(".. started openfire server detector.");
+        } catch (Exception e) {
+            Log.debug("cannot start openfire server detector: "
+                    + e.getMessage(), e);
         }
 
-        if (lowestClientPort != Integer.MAX_VALUE) {
-            collector = new JavaMonitorCollector(lowestClientPort);
-        } else if (lowestPort != Integer.MAX_VALUE) {
-            collector = new JavaMonitorCollector(lowestPort);
-        } else {
-            collector = new JavaMonitorCollector();
+        try {
+            packetCounter = new PacketCounter();
+            packetCounter.start();
+            JmxHelper.register(packetCounter, OBJECTNAME_PACKET_COUNTER);
+
+            Log.debug(".. started stanza counter.");
+        } catch (Exception e) {
+            Log.debug("cannot start stanza counter: " + e.getMessage(), e);
         }
 
+        try {
+            client = new CoreThreadPool(((ConnectionManagerImpl) XMPPServer
+                    .getInstance().getConnectionManager()).getSocketAcceptor());
+            client.start();
+            JmxHelper.register(client, OBJECTNAME_CORE_CLIENT_THREADPOOL);
+
+            Log.debug(".. started client thread pool monitor.");
+        } catch (Exception e) {
+            Log.debug("cannot start client thread pool monitor: "
+                    + e.getMessage(), e);
+        }
+
+        try {
+            database = new DatabasePool();
+            database.start();
+            JmxHelper.register(database, OBJECTNAME_DATABASEPOOL);
+
+            Log.debug(".. started database pool monitor.");
+        } catch (Exception e) {
+            Log.debug("cannot start database pool monitor: " + e.getMessage(),
+                    e);
+        }
+
+        collector = new JavaMonitorCollector();
         collector.start();
         Log.info("Java-Monitor plugin fully initialized.");
     }
@@ -116,7 +114,6 @@ public class JavaMonitorPlugin implements Plugin {
         Log.info("Stop sending data to Java-monitor.com.");
         collector.stop();
 
-        Log.info("Stop collecting data.");
         database.stop();
         JmxHelper.unregister(OBJECTNAME_DATABASEPOOL);
 

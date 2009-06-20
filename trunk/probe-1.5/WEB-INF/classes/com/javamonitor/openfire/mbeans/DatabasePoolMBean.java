@@ -1,30 +1,30 @@
 package com.javamonitor.openfire.mbeans;
 
+import org.logicalcobwebs.proxool.ProxoolException;
+
 /**
- * 
- * TODO Add JavaDoc comment...
+ * The proxool database pool MBean interface.
  * 
  * @author Guus der Kinderen, guus.der.kinderen@gmail.com
  */
 public interface DatabasePoolMBean {
+    int getMinimumConnectionCount() throws ProxoolException;
 
-	public int getMinimumConnectionCount();
+    int getMaximumConnectionCount() throws ProxoolException;
 
-	public int getMaximumConnectionCount();
+    int getAvailableConnectionCount() throws ProxoolException;
 
-	public int getAvailableConnectionCount();
+    int getActiveConnectionCount() throws ProxoolException;
 
-	public int getActiveConnectionCount();
+    long getMaximumActiveTime() throws ProxoolException;
 
-	public long getMaximumActiveTime();
+    long getMaximumConnectionLifetime() throws ProxoolException;
 
-	public long getMaximumConnectionLifetime();
+    long getServedCount() throws ProxoolException;
 
-	public long getServedCount();
+    long getRefusedCount() throws ProxoolException;
 
-	public long getRefusedCount();
+    int getOfflineConnectionCount() throws ProxoolException;
 
-	public int getOfflineConnectionCount();
-
-	public long getConnectionCount();
+    long getConnectionCount() throws ProxoolException;
 }
