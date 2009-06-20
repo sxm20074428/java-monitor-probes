@@ -25,7 +25,7 @@ public class CoreThreadPool implements CoreThreadPoolMBean {
      */
     public CoreThreadPool(final SocketAcceptor acceptor) {
         if (acceptor == null) {
-            throw new IllegalArgumentException();
+            throw new NullPointerException("acceptor is null");
         }
 
         final ExecutorThreadModel threadModel = (ExecutorThreadModel) acceptor
