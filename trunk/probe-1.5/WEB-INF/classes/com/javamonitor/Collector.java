@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.management.ObjectName;
 
@@ -34,6 +35,9 @@ import com.javamonitor.mbeans.Server;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 final class Collector {
+    private static final Logger log = Logger
+            .getLogger(JavaMonitorCollector.class.getName());
+
     private final URL url;
 
     private String account = null;
@@ -330,8 +334,9 @@ final class Collector {
         if (proxy == null) {
             if (getProperty("http.proxyHost") != null) {
                 proxy = new Proxy(HTTP, new InetSocketAddress(
-                        getProperty("http.proxyHost"),
-                        parseInt(getProperty("http.proxyPort"))));
+                        getProperty("http.proxyHost"), parseInt(getProperty(
+                                "http.proxyPort", "80"))));
+                log.info("using proxy " + proxy);
             } else {
                 proxy = NO_PROXY;
             }
