@@ -23,8 +23,6 @@ import com.javamonitor.mbeans.Threading;
  * to use, this helper also does its best to find mbeans and cache their
  * lookups. The reason for doing this is that there may be more than one mbean
  * server and we'd like to give Java-monitor a single view over all of those.
- * <p>
- * If we have to register mbeans
  * 
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
