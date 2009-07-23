@@ -1,5 +1,10 @@
 package com.javamonitor;
 
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
+import static java.net.Proxy.NO_PROXY;
+import static java.net.Proxy.Type.HTTP;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +13,8 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -260,7 +267,7 @@ final class Collector {
         PrintStream out = null;
         InputStream in = null;
         try {
-            connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpURLConnection) url.openConnection(findProxy());
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setConnectTimeout(TWO_MINUTES);
@@ -299,5 +306,36 @@ final class Collector {
                 }
             }
         }
+    }
+
+    private static Proxy proxy = null;
+
+    /**
+     * Locate and configure the use of an HTTP proxy, if configured. The
+     * standard proxy system properties seem to get ignored by our way of
+     * opening the connection, so we use the properties to explicitly create and
+     * use a proxy.
+     * <p>
+     * I considered introducing Java-monitor-specific settings, but I like this
+     * solution better. It makes the probe follow the normal way to configure
+     * proxies.
+     * <p>
+     * See also
+     * http://java.sun.com/javase/6/docs/technotes/guides/net/proxies.html.
+     * 
+     * @return The configured HTTP proxy, or the no-proxy placeholder if no
+     *         proxy is desired.
+     */
+    private static Proxy findProxy() {
+        if (proxy == null) {
+            if (getProperty("http.proxyHost") != null) {
+                proxy = new Proxy(HTTP, new InetSocketAddress(
+                        getProperty("http.proxyHost"),
+                        parseInt(getProperty("http.proxyPort"))));
+            } else {
+                proxy = NO_PROXY;
+            }
+        }
+        return proxy;
     }
 }
