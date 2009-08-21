@@ -77,4 +77,12 @@ final class ServerJetty implements ServerMBean {
 
         return lowest;
     }
+
+    /**
+     * @see com.javamonitor.mbeans.ServerMBean#getLastException()
+     */
+    public Throwable getLastException() {
+        // not used, the Server class resolves this for us
+        throw new Error("Not implemented...");
+    }
 }

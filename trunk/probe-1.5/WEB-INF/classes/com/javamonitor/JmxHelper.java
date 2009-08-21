@@ -277,9 +277,12 @@ public class JmxHelper {
 
     /**
      * Register the cool beans we need to find our way in the JMX jungle.
+     * 
+     * @param server
+     *            The server mbean to register.
      */
-    public static void registerCoolMBeans() {
-        register(new Server(), Server.objectName);
+    public static void registerCoolMBeans(final Server server) {
+        register(server, Server.objectName);
         register(new Threading(), Threading.objectName);
         register(new DNSCachePolicy(), DNSCachePolicy.objectName);
     }

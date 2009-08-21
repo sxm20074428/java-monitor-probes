@@ -36,4 +36,14 @@ public interface ServerMBean {
      *             When there was a problem querying JMX.
      */
     Integer getHttpPort() throws Exception;
+
+    /**
+     * Find the last exception that this probe saw. We use it to send to the
+     * collector server, once the connection is restored, and we use it to avoid
+     * logging an exception every minute while the connection to the collector
+     * servers is down.
+     * 
+     * @return The last exception we saw.
+     */
+    Throwable getLastException();
 }

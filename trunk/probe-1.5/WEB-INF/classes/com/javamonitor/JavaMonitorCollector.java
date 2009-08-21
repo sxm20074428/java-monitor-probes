@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.javamonitor.mbeans.Server;
+
 /**
  * The Java-monitor collector class.
  * 
@@ -25,6 +27,8 @@ public class JavaMonitorCollector {
     private static final String JAVA_MONITOR_URL = "javamonitor.url";
 
     private static final String JAVA_MONITOR_ID = "javamonitor.uniqueid";
+
+    private static final Server server = new Server();
 
     /**
      * Create a new Java-monitor collector, which requires the URL to be
@@ -90,7 +94,7 @@ public class JavaMonitorCollector {
      */
     public synchronized void start() {
         if (!started && collectorThread != null) {
-            JmxHelper.registerCoolMBeans();
+            JmxHelper.registerCoolMBeans(server);
 
             collectorThread.start();
             started = true;
@@ -120,7 +124,6 @@ public class JavaMonitorCollector {
          */
         public void run() {
             try {
-
                 // give the container around us a little time to start up and
                 // (more importantly) register its mbeans.
                 Thread.sleep(2000L);
@@ -131,6 +134,7 @@ public class JavaMonitorCollector {
                             if (collector.push()) {
                                 collector.push();
                             }
+                            server.setLastException(null);
 
                             Thread.sleep(1L * MINUTES);
                         }
@@ -139,13 +143,12 @@ public class JavaMonitorCollector {
                     } catch (OnHoldException e) {
                         throw e; // it ends up in the outer try block
                     } catch (Throwable e) {
-                        log
-                                .log(
-                                        Level.SEVERE,
-                                        "This probe was hit by an unexpected exception (it will retry in five minutes): "
-                                                + e.getMessage(), e);
-                        Thread.sleep(5L * MINUTES);
-                        log.log(Level.INFO, "resuming operation");
+                        if (server.getLastException() == null) {
+                            server.setLastException(e);
+                            log.log(Level.SEVERE,
+                                    "This probe was hit by an unexpected exception: "
+                                            + e.getMessage(), e);
+                        }
                     }
                 }
             } catch (InterruptedException e) {

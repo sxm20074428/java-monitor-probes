@@ -9,6 +9,7 @@ import com.javamonitor.JmxHelper;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 public class Server implements ServerMBean {
+    private Throwable lastException = null;
 
     private final ServerMBean actualServer;
 
@@ -91,5 +92,22 @@ public class Server implements ServerMBean {
         }
 
         return actualServer.getHttpPort();
+    }
+
+    /**
+     * @see com.javamonitor.mbeans.ServerMBean#getLastException()
+     */
+    public Throwable getLastException() {
+        return lastException;
+    }
+
+    /**
+     * Set the last exception that the probe saw.
+     * 
+     * @param lastException
+     *            The last exception to set.
+     */
+    public void setLastException(final Throwable lastException) {
+        this.lastException = lastException;
     }
 }
