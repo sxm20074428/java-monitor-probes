@@ -106,4 +106,12 @@ class ServerTomcat implements ServerMBean {
 
         return "older than 5.5.16";
     }
+
+    /**
+     * @see com.javamonitor.mbeans.ServerMBean#getLastException()
+     */
+    public Throwable getLastException() {
+        // not used, the Server class resolves this for us
+        throw new Error("Not implemented...");
+    }
 }

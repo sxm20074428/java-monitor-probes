@@ -40,4 +40,12 @@ public class ServerOpenfire implements ServerMBean {
     public Integer getHttpPort() throws Exception {
         return JmxHelper.queryInt(OBJECTNAME_OPENFIRE, "LowestPort");
     }
+
+    /**
+     * @see com.javamonitor.mbeans.ServerMBean#getLastException()
+     */
+    public Throwable getLastException() {
+        // not used, the Server class resolves this for us
+        throw new Error("Not implemented...");
+    }
 }
