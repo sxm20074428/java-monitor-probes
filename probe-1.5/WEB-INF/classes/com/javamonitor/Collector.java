@@ -73,8 +73,8 @@ final class Collector {
      * statistics.
      * 
      * @return <code>true</code> if the configuration was stale and we need to
-     *         reconfigure. <code>false</code> if we may just reuse the
-     *         existing list.
+     *         reconfigure. <code>false</code> if we may just reuse the existing
+     *         list.
      * @throws OnHoldException
      *             When we were put on hold by the server.
      * @throws Exception
@@ -276,6 +276,7 @@ final class Collector {
             connection.setDoOutput(true);
             connection.setConnectTimeout(TWO_MINUTES);
             connection.setReadTimeout(TWO_MINUTES);
+            connection.setRequestProperty("Connection", "close");
 
             out = new PrintStream(connection.getOutputStream());
             request.storeToXML(out, null);
