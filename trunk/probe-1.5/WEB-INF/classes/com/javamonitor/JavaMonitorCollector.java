@@ -149,6 +149,8 @@ public class JavaMonitorCollector {
                                     "This probe was hit by an unexpected exception: "
                                             + e.getMessage(), e);
                         }
+
+                        Thread.sleep(1L * MINUTES);
                     }
                 }
             } catch (InterruptedException e) {
