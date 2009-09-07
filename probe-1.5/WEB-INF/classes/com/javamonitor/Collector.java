@@ -1,9 +1,11 @@
 package com.javamonitor;
 
+import static com.javamonitor.JmxHelper.queryString;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
 import static java.net.Proxy.NO_PROXY;
 import static java.net.Proxy.Type.HTTP;
+import static java.util.logging.Logger.getLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,18 +37,31 @@ import com.javamonitor.mbeans.Server;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 final class Collector {
-    private static final Logger log = Logger
-            .getLogger(JavaMonitorCollector.class.getName());
+    private static final Logger log = getLogger(JavaMonitorCollector.class
+            .getName());
+
+    /**
+     * We locate and configure the use of an HTTP proxy, if configured. The
+     * standard proxy system properties seem to get ignored by our way of
+     * opening the connection, so we use the properties to explicitly create and
+     * use a proxy.
+     * <p>
+     * I considered introducing Java-monitor-specific settings, but I like this
+     * solution better. It makes the probe follow the normal way to configure
+     * proxies.
+     * <p>
+     * See also
+     * http://java.sun.com/javase/6/docs/technotes/guides/net/proxies.html.
+     */
+    private final Proxy proxy;
 
     private final URL url;
 
     private String account = null;
 
-    private String lowestPort = null;
+    private final String uniqueId;
 
     private String session = null;
-
-    private String appserver = null;
 
     private final Collection<Item> items = new LinkedList<Item>();
 
@@ -61,8 +76,15 @@ final class Collector {
      */
     Collector(final URL url, final Integer uniqueId) {
         this.url = url;
-        if (uniqueId != null) {
-            lowestPort = uniqueId.toString();
+        this.uniqueId = uniqueId == null ? null : uniqueId.toString();
+
+        if (getProperty("http.proxyHost") != null) {
+            proxy = new Proxy(HTTP, new InetSocketAddress(
+                    getProperty("http.proxyHost"), parseInt(getProperty(
+                            "http.proxyPort", "80"))));
+            log.info("using proxy " + proxy);
+        } else {
+            proxy = NO_PROXY;
         }
     }
 
@@ -83,18 +105,23 @@ final class Collector {
 
         final Properties request = queryItems();
         request.put("account", account);
-        request.put("localIp", getLocalIp(url));
-        if (lowestPort != null) {
-            request.put("lowestPort", lowestPort);
+        request.put("localIp", getLocalIp());
+        if (uniqueId != null) {
+            request.put("lowestPort", uniqueId);
+        } else {
+            final String lowestPort = queryString(Server.objectName,
+                    Server.httpPortAttribute);
+            if (lowestPort != null) {
+                request.put("lowestPort", lowestPort);
+            }
         }
-        if (appserver != null) {
-            request.put("appserver", appserver);
-        }
+        request.put("appserver", queryString(Server.objectName,
+                Server.nameAttribute));
         if (session != null) {
             request.put(SESSION, session);
         }
 
-        final Properties response = push(url, request);
+        final Properties response = push(request);
 
         return parse(response);
     }
@@ -108,19 +135,21 @@ final class Collector {
      * We do not reuse the connection, because the JVM may be running on a
      * laptop that moves from network to network.
      * 
-     * @param url
-     *            The url to base the test off of.
      * @return The local IP address of this JVM.
      * @throws UnknownHostException
      *             When we could not determine the local IP address.
      * @throws IOException
      *             When we could not determine the local IP address.
      */
-    private static String getLocalIp(final URL url)
-            throws UnknownHostException, IOException {
+    private String getLocalIp() throws UnknownHostException, IOException {
         Socket s = null;
         try {
-            s = new Socket(url.getHost(), 80);
+            if (getProperty("http.proxyHost") != null) {
+                s = new Socket(getProperty("http.proxyHost"),
+                        parseInt(getProperty("http.proxyPort", "80")));
+            } else {
+                s = new Socket(url.getHost(), 80);
+            }
             return s.getLocalAddress().getHostAddress();
         } finally {
             if (s != null) {
@@ -145,13 +174,6 @@ final class Collector {
                     in.close();
                 }
             }
-
-            if (lowestPort == null) {
-                lowestPort = JmxHelper.queryString(Server.objectName,
-                        Server.httpPortAttribute);
-            }
-            appserver = JmxHelper.queryString(Server.objectName,
-                    Server.nameAttribute);
         }
     }
 
@@ -251,13 +273,12 @@ final class Collector {
      */
     private static final int TWO_MINUTES = 2 * 60 * 1000;
 
-    private static Properties push(final URL url, final Properties request)
-            throws IOException {
+    private Properties push(final Properties request) throws IOException {
         HttpURLConnection connection = null;
         PrintStream out = null;
         InputStream in = null;
         try {
-            connection = (HttpURLConnection) url.openConnection(findProxy());
+            connection = (HttpURLConnection) url.openConnection(proxy);
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setConnectTimeout(TWO_MINUTES);
@@ -297,37 +318,5 @@ final class Collector {
                 }
             }
         }
-    }
-
-    private static Proxy proxy = null;
-
-    /**
-     * Locate and configure the use of an HTTP proxy, if configured. The
-     * standard proxy system properties seem to get ignored by our way of
-     * opening the connection, so we use the properties to explicitly create and
-     * use a proxy.
-     * <p>
-     * I considered introducing Java-monitor-specific settings, but I like this
-     * solution better. It makes the probe follow the normal way to configure
-     * proxies.
-     * <p>
-     * See also
-     * http://java.sun.com/javase/6/docs/technotes/guides/net/proxies.html.
-     * 
-     * @return The configured HTTP proxy, or the no-proxy placeholder if no
-     *         proxy is desired.
-     */
-    private static Proxy findProxy() {
-        if (proxy == null) {
-            if (getProperty("http.proxyHost") != null) {
-                proxy = new Proxy(HTTP, new InetSocketAddress(
-                        getProperty("http.proxyHost"), parseInt(getProperty(
-                                "http.proxyPort", "80"))));
-                log.info("using proxy " + proxy);
-            } else {
-                proxy = NO_PROXY;
-            }
-        }
-        return proxy;
     }
 }
