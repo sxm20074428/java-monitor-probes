@@ -42,8 +42,6 @@ final class Collector {
 
     private String account = null;
 
-    private String localIp = null;
-
     private String lowestPort = null;
 
     private String session = null;
@@ -81,32 +79,24 @@ final class Collector {
      *             When there was a problem.
      */
     boolean push() throws Exception, OnHoldException {
-        try {
-            init();
+        init();
 
-            final Properties request = queryItems();
-            request.put("account", account);
-            request.put("localIp", localIp);
-            if (lowestPort != null) {
-                request.put("lowestPort", lowestPort);
-            }
-            if (appserver != null) {
-                request.put("appserver", appserver);
-            }
-            if (session != null) {
-                request.put(SESSION, session);
-            }
-
-            final Properties response = push(url, request);
-
-            return parse(response);
-        } catch (OnHoldException e) {
-            session = null;
-            throw e;
-        } catch (Exception e) {
-            session = null;
-            throw e;
+        final Properties request = queryItems();
+        request.put("account", account);
+        request.put("localIp", getLocalIp(url));
+        if (lowestPort != null) {
+            request.put("lowestPort", lowestPort);
         }
+        if (appserver != null) {
+            request.put("appserver", appserver);
+        }
+        if (session != null) {
+            request.put(SESSION, session);
+        }
+
+        final Properties response = push(url, request);
+
+        return parse(response);
     }
 
     /**
@@ -162,10 +152,6 @@ final class Collector {
             }
             appserver = JmxHelper.queryString(Server.objectName,
                     Server.nameAttribute);
-        }
-
-        if (localIp == null) {
-            localIp = getLocalIp(url);
         }
     }
 
