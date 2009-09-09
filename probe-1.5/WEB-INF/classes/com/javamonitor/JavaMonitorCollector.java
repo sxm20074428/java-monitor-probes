@@ -10,15 +10,16 @@ import com.javamonitor.mbeans.Server;
 /**
  * The Java-monitor collector class.
  * 
- * @author goltharnl
+ * @author Barry van Someren
+ * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 public class JavaMonitorCollector {
     private static final Logger log = Logger
             .getLogger(JavaMonitorCollector.class.getName());
 
-    private final Thread collectorThread;
+    private Thread collectorThread = null;
 
-    private final Collector collector;
+    private Collector collector = null;
 
     private boolean started = false;
 
@@ -35,7 +36,7 @@ public class JavaMonitorCollector {
      * specified using the system property &quot;javamonitor.url&quot;.
      * <p>
      * If specified, it will use the value from system property
-     * &quot;javamonitor.uniqueid&quot; as the unique ID for this applicaiton.
+     * &quot;javamonitor.uniqueid&quot; as the unique ID for this application.
      * Failing that, it will use the MBeans to find the lowest port number, if
      * applicable.
      */
@@ -57,36 +58,50 @@ public class JavaMonitorCollector {
      *            The unique ID to use for this application, in case system
      *            property &quot;javamonitor.uniqueid&quot; is not set.
      */
-    public JavaMonitorCollector(final Integer uniqueId) {
+    public JavaMonitorCollector(final String uniqueId) {
+        String id = uniqueId;
+        if (System.getProperty(JAVA_MONITOR_ID) != null) {
+            id = System.getProperty(JAVA_MONITOR_ID);
+        }
+        if (id == null) {
+            id = checkForEatJId();
+        }
+
         final String urlString = System.getProperty(JAVA_MONITOR_URL,
                 "http://194.109.206.51/lemongrass/1.0/push");
-        URL url = null;
+
         try {
-            url = new URL(urlString);
+            collector = new Collector(new URL(urlString), id);
+            collectorThread = new Thread(new CollectorDriver(),
+                    "java-monitor collector");
         } catch (MalformedURLException e) {
+            collector = null;
+            collectorThread = null;
             log.log(Level.SEVERE, "unable to parse '" + urlString
                     + "' into a URL: " + e.getMessage(), e);
         }
+    }
 
-        Integer id = uniqueId;
-        if (System.getProperty(JAVA_MONITOR_ID) != null) {
-            try {
-                id = Integer.parseInt(System.getProperty(JAVA_MONITOR_ID));
-            } catch (NumberFormatException e) {
-                log.log(Level.WARNING, "unable to parse '" + id
-                        + "' into a number, using '" + id + "' instead: "
-                        + e.getMessage(), e);
-            }
+    /**
+     * We have some specific code for eatj.com's hosting service, because they
+     * use port dynamically. This causes eatj customers to see a new host after
+     * every restart. We check here to see if we are running at eatj. If so, we
+     * find the eatj user ID to use as lowest 'port'.
+     * 
+     * @return The eatj user id, or <code>null</code> if we are not running on
+     *         eatj hosts.
+     */
+    private String checkForEatJId() {
+        final String hostname = System.getenv("HOSTNAME");
+        if (hostname == null) {
+            return null;
         }
 
-        if (url != null) {
-            collector = new Collector(url, id);
-            collectorThread = new Thread(new CollectorDriver(),
-                    "java-monitor collector");
-        } else {
-            collector = null;
-            collectorThread = null;
+        if (!hostname.toLowerCase().endsWith(".eatj.com")) {
+            return null;
         }
+
+        return System.getenv("USER") + " (eatj)";
     }
 
     /**
