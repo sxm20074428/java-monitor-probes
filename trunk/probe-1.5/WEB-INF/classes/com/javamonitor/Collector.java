@@ -74,9 +74,9 @@ final class Collector {
      *            The unique ID to use instead of port number, or
      *            <code>null</code> to use the port number.
      */
-    Collector(final URL url, final Integer uniqueId) {
+    Collector(final URL url, final String uniqueId) {
         this.url = url;
-        this.uniqueId = uniqueId == null ? null : uniqueId.toString();
+        this.uniqueId = uniqueId == null ? null : uniqueId;
 
         if (getProperty("http.proxyHost") != null) {
             proxy = new Proxy(HTTP, new InetSocketAddress(
@@ -269,7 +269,7 @@ final class Collector {
     /**
      * We set the timeout on the connection to be a few minutes. This way we are
      * robust against network issues that cause probes to wait for data
-     * indefiniedly.
+     * indefinitely.
      */
     private static final int TWO_MINUTES = 2 * 60 * 1000;
 

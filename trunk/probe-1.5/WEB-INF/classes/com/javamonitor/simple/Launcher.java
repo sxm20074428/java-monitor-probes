@@ -6,7 +6,8 @@ import com.javamonitor.JavaMonitorCollector;
  * A sample program to demonstrate how to start the Java-monitor probe from a
  * Java program.
  * 
- * @author goltharnl
+ * @author Barry van Someren
+ * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 public class Launcher {
     /**
@@ -20,7 +21,7 @@ public class Launcher {
         //
         // Create a new collector, specifying a unique application ID.
         // 
-        // Don't read anyting in the number, it is just something I made up. You
+        // Don't read anything in the number, it is just something I made up. You
         // can just pick anything you like. As long as you have a different one
         // for each application that runs on your machine.
         //
@@ -28,12 +29,12 @@ public class Launcher {
         // than one. This ID can be overridden on the command line using the
         // system property javamonitor.uniqueid.
         //
-        // If you run the applicaiton inside Tomcat, JBoss or SpringSource DM
+        // If you run the application inside Tomcat, JBoss or SpringSource DM
         // Server, you can leave the number out. The probe will then pick one
         // for you.
         //
         final JavaMonitorCollector collector = new JavaMonitorCollector(
-                21435489);
+                "21435489");
 
         // start the collector...
         collector.start();
