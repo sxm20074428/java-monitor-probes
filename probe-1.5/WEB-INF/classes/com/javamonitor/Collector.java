@@ -148,7 +148,11 @@ final class Collector {
                 s = new Socket(getProperty("http.proxyHost"),
                         parseInt(getProperty("http.proxyPort", "80")));
             } else {
-                s = new Socket(url.getHost(), 80);
+                int port = 80;
+                if (url.getPort() != -1) {
+                    port = url.getPort();
+                }
+                s = new Socket(url.getHost(), port);
             }
             return s.getLocalAddress().getHostAddress();
         } finally {
