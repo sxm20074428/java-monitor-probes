@@ -70,7 +70,7 @@ public class JavaMonitorCollector {
         }
 
         final String urlString = System.getProperty(JAVA_MONITOR_URL,
-                "http://194.109.206.51/lemongrass/1.0/push");
+                "http://194.109.206.51/lemongrass/1.1/push");
 
         try {
             collector = new Collector(new URL(urlString), id);
