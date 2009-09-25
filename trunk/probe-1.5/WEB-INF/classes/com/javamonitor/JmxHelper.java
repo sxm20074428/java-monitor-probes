@@ -1,5 +1,7 @@
 package com.javamonitor;
 
+import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
+
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +36,6 @@ public class JmxHelper {
 
     private static final Map<ObjectName, MBeanServer> knownMBeanServers = new HashMap<ObjectName, MBeanServer>();
 
-    @SuppressWarnings("unchecked")
     private static MBeanServer findMBeanServer(final ObjectName objectName) {
         // any cached instance lookups?
         if (knownMBeanServers.containsKey(objectName)) {
@@ -58,7 +59,7 @@ public class JmxHelper {
 
         if (mbeanServer == null) {
             // oh well, most likely it is here then...
-            mbeanServer = ManagementFactory.getPlatformMBeanServer();
+            mbeanServer = getPlatformMBeanServer();
         }
 
         knownMBeanServers.put(objectName, mbeanServer);
@@ -89,18 +90,15 @@ public class JmxHelper {
      *            The mbean to register.
      * @param objectNameString
      *            The object name to register it under.
+     * @throws Exception
+     *             When there was a problem registering MBeans.
      */
     public static void register(final Object mbean,
-            final String objectNameString) {
+            final String objectNameString) throws Exception {
         unregister(objectNameString);
 
-        try {
-            ManagementFactory.getPlatformMBeanServer().registerMBean(mbean,
-                    new ObjectName(objectNameString));
-        } catch (Exception e) {
-            // sshhh, this kind of stuff happens and we don't want to bother the
-            // admin with it.
-        }
+        getPlatformMBeanServer().registerMBean(mbean,
+                new ObjectName(objectNameString));
     }
 
     /**
@@ -255,7 +253,6 @@ public class JmxHelper {
      * @throws MalformedObjectNameException
      *             When the query could not be parsed.
      */
-    @SuppressWarnings("unchecked")
     public static Set<ObjectName> queryNames(final String query)
             throws MalformedObjectNameException {
         final ObjectName objectNameQuery = new ObjectName(query);
@@ -268,8 +265,7 @@ public class JmxHelper {
         }
 
         if (names.size() == 0) {
-            names = ManagementFactory.getPlatformMBeanServer().queryMBeans(
-                    objectNameQuery, null);
+            names = getPlatformMBeanServer().queryNames(objectNameQuery, null);
         }
 
         return names;
@@ -280,8 +276,10 @@ public class JmxHelper {
      * 
      * @param server
      *            The server mbean to register.
+     * @throws Exception
+     *             When one of the MBeans could not be registered.
      */
-    public static void registerCoolMBeans(final Server server) {
+    public static void registerCoolMBeans(final Server server) throws Exception {
         register(server, Server.objectName);
         register(new Threading(), Threading.objectName);
         register(new DNSCachePolicy(), DNSCachePolicy.objectName);

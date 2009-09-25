@@ -103,8 +103,12 @@ public class JavaMonitorPlugin implements Plugin {
         }
 
         collector = new JavaMonitorCollector();
-        collector.start();
-        Log.info("Java-Monitor plugin fully initialized.");
+        try {
+            collector.start();
+            Log.info("Java-Monitor plugin fully initialized.");
+        } catch (Exception e) {
+            Log.error("cannot start java-monitor plugin: " + e.getMessage(), e);
+        }
     }
 
     /**

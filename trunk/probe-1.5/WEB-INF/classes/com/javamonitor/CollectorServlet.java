@@ -21,7 +21,12 @@ public class CollectorServlet extends HttpServlet {
         super.init();
 
         collector = new JavaMonitorCollector();
-        collector.start();
+        try {
+            collector.start();
+        } catch (Exception e) {
+            throw new ServletException(
+                    "Unable to start Java-monitor collector: ", e);
+        }
     }
 
     /**

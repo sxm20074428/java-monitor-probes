@@ -15,13 +15,15 @@ public class Launcher {
      * 
      * @param args
      *            ignored.
-     * @throws InterruptedException
+     * @throws Exception
+     *             When the probe could not be started.
      */
-    public static void main(final String args[]) throws InterruptedException {
+    public static void main(final String args[]) throws Exception {
         //
         // Create a new collector, specifying a unique application ID.
         // 
-        // Don't read anything in the number, it is just something I made up. You
+        // Don't read anything in the number, it is just something I made up.
+        // You
         // can just pick anything you like. As long as you have a different one
         // for each application that runs on your machine.
         //
