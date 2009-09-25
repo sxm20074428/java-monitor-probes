@@ -1,5 +1,7 @@
 package com.javamonitor;
 
+import static com.javamonitor.JmxHelper.registerCoolMBeans;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -106,10 +108,13 @@ public class JavaMonitorCollector {
 
     /**
      * Start the collector, if it was not already started.
+     * 
+     * @throws Exception
+     *             When the helper MBeans could not be registered.
      */
-    public synchronized void start() {
+    public synchronized void start() throws Exception {
         if (!started && collectorThread != null) {
-            JmxHelper.registerCoolMBeans(server);
+            registerCoolMBeans(server);
 
             collectorThread.start();
             started = true;
