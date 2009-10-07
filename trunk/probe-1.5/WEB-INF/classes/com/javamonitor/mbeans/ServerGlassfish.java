@@ -12,7 +12,7 @@ import com.javamonitor.JmxHelper;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 final class ServerGlassfish implements ServerMBean {
-    private static final String OBJECTNAME_GLASSFISH_SERVER = "com.sun.appserv:j2eeType=J2EEServer,name=server,category=runtime";
+    private static final String OBJECTNAME_GLASSFISH_SERVER = "com.sun.appserv:j2eeType=J2EEServer,category=runtime,*";
 
     /**
      * Test if we're maybe running inside a Glassfish instance.
