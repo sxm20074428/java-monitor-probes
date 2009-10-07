@@ -1,6 +1,7 @@
 package com.javamonitor.mbeans;
 
 import java.util.Collection;
+import java.util.Set;
 
 import javax.management.ObjectName;
 
@@ -21,7 +22,13 @@ final class ServerGlassfish implements ServerMBean {
      *         <code>false</code> if not.
      */
     public static boolean runningInGlassfish() {
-        return JmxHelper.mbeanExists(OBJECTNAME_GLASSFISH_SERVER);
+        try {
+            final Set<ObjectName> serverNames = JmxHelper
+                    .queryNames(OBJECTNAME_GLASSFISH_SERVER);
+            return !serverNames.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -35,7 +42,13 @@ final class ServerGlassfish implements ServerMBean {
      * @see com.javamonitor.mbeans.ServerMBean#getVersion()
      */
     public String getVersion() throws Exception {
-        return JmxHelper.queryString(OBJECTNAME_GLASSFISH_SERVER,
+        final Set<ObjectName> serverNames = JmxHelper
+                .queryNames(OBJECTNAME_GLASSFISH_SERVER);
+        if (serverNames.isEmpty()) {
+            return null;
+        }
+
+        return JmxHelper.queryString(serverNames.iterator().next(),
                 "serverVersion").replaceFirst("^[^0-9]*", "").trim();
     }
 
