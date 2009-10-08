@@ -2,7 +2,6 @@ package com.javamonitor;
 
 import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
 
-import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -305,8 +304,8 @@ public class JmxHelper {
      */
     public static void unregister(final String objectName) {
         try {
-            ManagementFactory.getPlatformMBeanServer().unregisterMBean(
-                    new ObjectName(objectName));
+            getPlatformMBeanServer()
+                    .unregisterMBean(new ObjectName(objectName));
         } catch (Exception e) {
             // ignore, this was just to clean up
         }
