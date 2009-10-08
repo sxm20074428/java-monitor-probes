@@ -1,6 +1,8 @@
 package com.javamonitor;
 
+import static com.javamonitor.JmxHelper.mbeanExists;
 import static com.javamonitor.JmxHelper.registerCoolMBeans;
+import static com.javamonitor.JmxHelper.unregisterCoolMBeans;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -113,6 +115,11 @@ public class JavaMonitorCollector {
      *             When the helper MBeans could not be registered.
      */
     public synchronized void start() throws Exception {
+        if (mbeanExists(Server.objectName)) {
+            throw new OnHoldException(
+                    "A Java-monitor probe is already running in this JVM. See http://java-monitor.com/duplicate-probe.html");
+        }
+
         if (!started && collectorThread != null) {
             registerCoolMBeans(server);
 
@@ -133,7 +140,7 @@ public class JavaMonitorCollector {
                 // ignore, we're going down anyway
             }
 
-            JmxHelper.unregisterCoolMBeans();
+            unregisterCoolMBeans();
             started = false;
         }
     }
