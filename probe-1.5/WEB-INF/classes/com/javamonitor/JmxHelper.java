@@ -2,10 +2,10 @@ package com.javamonitor;
 
 import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
 
-import java.util.HashMap;
+
+
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.management.InstanceNotFoundException;
@@ -21,9 +21,9 @@ import com.javamonitor.mbeans.Threading;
 
 /**
  * The JMX facade, making JMX easy. Apart from making the JMX interface easier
- * to use, this helper also does its best to find mbeans and cache their
- * lookups. The reason for doing this is that there may be more than one mbean
- * server and we'd like to give Java-monitor a single view over all of those.
+ * to use, this helper also does its best to find mbeans. The reason for doing
+ * this is that there may be more than one mbean server and we'd like to give
+ * Java-monitor a single view over all of those.
  * 
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
@@ -33,36 +33,21 @@ public class JmxHelper {
      */
     public static final String objectNameBase = "com.javamonitor:type=";
 
-    private static final Map<ObjectName, MBeanServer> knownMBeanServers = new HashMap<ObjectName, MBeanServer>();
-
     private static MBeanServer findMBeanServer(final ObjectName objectName) {
-        // any cached instance lookups?
-        if (knownMBeanServers.containsKey(objectName)) {
-            return knownMBeanServers.get(objectName);
-        }
-
-        // no cached instances, search high and low...
-        MBeanServer mbeanServer = null;
-
         final List<MBeanServer> servers = MBeanServerFactory
                 .findMBeanServer(null);
-        for (int i = 0; mbeanServer == null && i < servers.size(); i++) {
+        for (int i = 0; i < servers.size(); i++) {
             try {
                 if (servers.get(i).getObjectInstance(objectName) != null) {
-                    mbeanServer = servers.get(i);
+                    return servers.get(i);
                 }
             } catch (InstanceNotFoundException e) {
                 // woops, not registered here...
             }
         }
 
-        if (mbeanServer == null) {
-            // oh well, most likely it is here then...
-            mbeanServer = getPlatformMBeanServer();
-        }
-
-        knownMBeanServers.put(objectName, mbeanServer);
-        return mbeanServer;
+        // oh well, most likely it is here then...
+        return getPlatformMBeanServer();
     }
 
     /**
