@@ -219,7 +219,7 @@ final class Collector {
                 if (!item.isPeriodic()) {
                     itemIterator.remove();
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 final StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
                 data.put(item.getId(), "||" + e.getClass().getName() + ": "
