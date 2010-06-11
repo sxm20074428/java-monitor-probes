@@ -55,7 +55,9 @@ final class Collector {
      */
     private final Proxy proxy;
 
-    private final URL url;
+    private static final String JAVA_MONITOR_URL = "javamonitor.url";
+
+    private URL pushUrl = null;
 
     private String account = null;
 
@@ -74,8 +76,7 @@ final class Collector {
      *            The unique ID to use instead of port number, or
      *            <code>null</code> to use the port number.
      */
-    Collector(final URL url, final String uniqueId) {
-        this.url = url;
+    Collector(final String uniqueId) {
         this.uniqueId = uniqueId == null ? null : uniqueId;
 
         if (getProperty("http.proxyHost") != null) {
@@ -149,10 +150,10 @@ final class Collector {
                         parseInt(getProperty("http.proxyPort", "80")));
             } else {
                 int port = 80;
-                if (url.getPort() != -1) {
-                    port = url.getPort();
+                if (pushUrl.getPort() != -1) {
+                    port = pushUrl.getPort();
                 }
-                s = new Socket(url.getHost(), port);
+                s = new Socket(pushUrl.getHost(), port);
             }
             return s.getLocalAddress().getHostAddress();
         } finally {
@@ -173,6 +174,26 @@ final class Collector {
                 in = new BufferedReader(new InputStreamReader(Collector.class
                         .getClassLoader().getResourceAsStream("uuid")));
                 account = in.readLine();
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+            }
+        }
+        if (pushUrl == null) {
+            BufferedReader in = null;
+            try {
+                final String urlString;
+                if (System.getProperty(JAVA_MONITOR_URL) != null) {
+                    urlString = getProperty(JAVA_MONITOR_URL);
+                } else {
+                    in = new BufferedReader(new InputStreamReader(
+                            Collector.class.getClassLoader()
+                                    .getResourceAsStream("pushUrl")));
+                    urlString = in.readLine();
+                }
+
+                pushUrl = new URL(urlString);
             } finally {
                 if (in != null) {
                     in.close();
@@ -282,7 +303,7 @@ final class Collector {
         PrintStream out = null;
         InputStream in = null;
         try {
-            connection = (HttpURLConnection) url.openConnection(proxy);
+            connection = (HttpURLConnection) pushUrl.openConnection(proxy);
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setConnectTimeout(TWO_MINUTES);

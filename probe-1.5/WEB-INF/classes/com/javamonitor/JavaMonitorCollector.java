@@ -3,9 +3,10 @@ package com.javamonitor;
 import static com.javamonitor.JmxHelper.mbeanExists;
 import static com.javamonitor.JmxHelper.registerCoolMBeans;
 import static com.javamonitor.JmxHelper.unregisterCoolMBeans;
+import static java.lang.System.getProperty;
+import static java.lang.System.getenv;
+import static java.lang.Thread.sleep;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,9 +28,7 @@ public class JavaMonitorCollector {
 
     private boolean started = false;
 
-    private static final long MINUTES = 60L * 1000L;
-
-    private static final String JAVA_MONITOR_URL = "javamonitor.url";
+    private static final long ONE_MINUTE = 60L * 1000L;
 
     private static final String JAVA_MONITOR_ID = "javamonitor.uniqueid";
 
@@ -64,26 +63,16 @@ public class JavaMonitorCollector {
      */
     public JavaMonitorCollector(final String uniqueId) {
         String id = uniqueId;
-        if (System.getProperty(JAVA_MONITOR_ID) != null) {
-            id = System.getProperty(JAVA_MONITOR_ID);
+        if (getProperty(JAVA_MONITOR_ID) != null) {
+            id = getProperty(JAVA_MONITOR_ID);
         }
         if (id == null) {
             id = checkForEatJId();
         }
 
-        final String urlString = System.getProperty(JAVA_MONITOR_URL,
-                "http://194.109.206.51/lemongrass/1.1/push");
-
-        try {
-            collector = new Collector(new URL(urlString), id);
-            collectorThread = new Thread(new CollectorDriver(),
-                    "java-monitor collector");
-        } catch (MalformedURLException e) {
-            collector = null;
-            collectorThread = null;
-            log.log(Level.SEVERE, "unable to parse '" + urlString
-                    + "' into a URL: " + e.getMessage(), e);
-        }
+        collector = new Collector(id);
+        collectorThread = new Thread(new CollectorDriver(),
+                "java-monitor collector");
     }
 
     /**
@@ -96,7 +85,7 @@ public class JavaMonitorCollector {
      *         eatj hosts.
      */
     private String checkForEatJId() {
-        final String hostname = System.getenv("HOSTNAME");
+        final String hostname = getenv("HOSTNAME");
         if (hostname == null) {
             return null;
         }
@@ -105,7 +94,7 @@ public class JavaMonitorCollector {
             return null;
         }
 
-        return System.getenv("USER") + " (eatj)";
+        return getenv("USER") + " (eatj)";
     }
 
     /**
@@ -153,7 +142,7 @@ public class JavaMonitorCollector {
             try {
                 // give the container around us a little time to start up and
                 // (more importantly) register its mbeans.
-                Thread.sleep(2000L);
+                sleep(2000L);
 
                 for (;;) {
                     try {
@@ -163,7 +152,7 @@ public class JavaMonitorCollector {
                             }
                             server.setLastException(null);
 
-                            Thread.sleep(1L * MINUTES);
+                            sleep(ONE_MINUTE);
                         }
                     } catch (InterruptedException e) {
                         throw e; // it ends up in the outer try block
@@ -177,7 +166,7 @@ public class JavaMonitorCollector {
                                             + e.getMessage(), e);
                         }
 
-                        Thread.sleep(1L * MINUTES);
+                        sleep(ONE_MINUTE);
                     }
                 }
             } catch (InterruptedException e) {
