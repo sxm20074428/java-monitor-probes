@@ -14,8 +14,10 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.Socket;
 import java.net.URL;
@@ -79,11 +81,24 @@ final class Collector {
     Collector(final String uniqueId) {
         this.uniqueId = uniqueId == null ? null : uniqueId;
 
-        if (getProperty("http.proxyHost") != null) {
-            proxy = new Proxy(HTTP, new InetSocketAddress(
-                    getProperty("http.proxyHost"), parseInt(getProperty(
-                            "http.proxyPort", "80"))));
+        final String proxyHost = getProperty("http.proxyHost");
+        final int proxyPort = parseInt(getProperty("http.proxyPort", "80"));
+        final String proxyUser = getProperty("http.proxyUser");
+        final String proxyPass = getProperty("http.proxyPassword", "");
+
+        if (proxyHost != null) {
+            proxy = new Proxy(HTTP, new InetSocketAddress(proxyHost, proxyPort));
             log.info("using proxy " + proxy);
+
+            if (proxyUser != null) {
+                Authenticator.setDefault(new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(proxyUser, proxyPass
+                                .toCharArray());
+                    }
+                });
+            }
         } else {
             proxy = NO_PROXY;
         }
