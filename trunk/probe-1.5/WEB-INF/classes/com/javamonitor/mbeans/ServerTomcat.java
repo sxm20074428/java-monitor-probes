@@ -59,8 +59,8 @@ class ServerTomcat implements ServerMBean {
 
         int lowest = Integer.MAX_VALUE;
         for (final ObjectName connector : connectors) {
-            final String scheme = queryString(connector, "scheme");
-            if ("http".equals(scheme)) {
+            final String protocol = queryString(connector, "protocol");
+            if (protocol.startsWith("HTTP")) {
                 lowest = Math.min(lowest, queryInt(connector, "port"));
             }
         }
