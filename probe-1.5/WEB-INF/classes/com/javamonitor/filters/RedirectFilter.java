@@ -30,7 +30,7 @@ public class RedirectFilter implements Filter {
             final ServletResponse response, final FilterChain chain)
             throws IOException {
         ((HttpServletResponse) response)
-                .sendRedirect("http://www.java-monitor.com/");
+                .sendRedirect("http://www.java-monitor.com/forum/");
     }
 
     /**
