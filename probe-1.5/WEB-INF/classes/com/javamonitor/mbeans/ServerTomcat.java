@@ -1,11 +1,14 @@
 package com.javamonitor.mbeans;
 
+import static com.javamonitor.JmxHelper.mbeanExists;
+import static com.javamonitor.JmxHelper.queryInt;
+import static com.javamonitor.JmxHelper.queryNames;
+import static com.javamonitor.JmxHelper.queryString;
+
 import java.util.Collection;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.ObjectName;
-
-import com.javamonitor.JmxHelper;
 
 /**
  * The tricky bits for Tomcat servers.
@@ -24,7 +27,7 @@ class ServerTomcat implements ServerMBean {
      *         if not.
      */
     public static boolean runningInTomcat() {
-        return JmxHelper.mbeanExists(OBJECTNAME_TOMCAT_SERVER);
+        return mbeanExists(OBJECTNAME_TOMCAT_SERVER);
     }
 
     /**
@@ -35,40 +38,37 @@ class ServerTomcat implements ServerMBean {
      * @see com.javamonitor.mbeans.ServerMBean#getHttpPort()
      */
     public Integer getHttpPort() throws Exception {
-        Collection<ObjectName> threadpools = null;
+        Collection<ObjectName> connectors = null;
         int slept = 0;
         do {
-            threadpools = JmxHelper.queryNames("*:type=ThreadPool,*");
-            if (threadpools.size() < 1) {
+            connectors = queryNames("*:type=Connector,*");
+            if (connectors.size() < 1) {
                 try {
                     Thread.sleep(1000L);
                 } catch (InterruptedException e) {
                     // won't happen...
                 }
             }
-        } while (threadpools.size() < 1 && slept++ < 30);
+        } while (connectors.size() < 1 && slept++ < 30);
 
-        if (threadpools.size() < 0) {
+        if (connectors.size() < 0) {
             throw new IllegalStateException(
                     getName()
-                            + " threadpool MBeans were not loaded after 30 seconds, aborting");
+                            + " connector MBeans were not loaded after 30 seconds, aborting");
         }
 
         int lowest = Integer.MAX_VALUE;
-        for (final ObjectName processor : threadpools) {
-            final String name = processor.toString();
-            if (name.contains("http")) {
-                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
-                        ".*-", "")));
+        for (final ObjectName connector : connectors) {
+            final String scheme = queryString(connector, "scheme");
+            if ("http".equals(scheme)) {
+                lowest = Math.min(lowest, queryInt(connector, "port"));
             }
         }
 
         // maybe there are no HTTP connectors?
         if (lowest == Integer.MAX_VALUE) {
-            for (final ObjectName processor : threadpools) {
-                final String name = processor.toString();
-                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
-                        ".*-", "")));
+            for (final ObjectName connector : connectors) {
+                lowest = Math.min(lowest, queryInt(connector, "port"));
             }
         }
 
@@ -84,7 +84,7 @@ class ServerTomcat implements ServerMBean {
      */
     public String getName() throws Exception {
         try {
-            return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,
+            return queryString(OBJECTNAME_TOMCAT_SERVER,
                     ATTRIBUTE_TOMCAT_SERVERINFO).replaceAll("/.*", "");
         } catch (AttributeNotFoundException e) {
             // hmm, it's an old version of Tomcat
@@ -98,7 +98,7 @@ class ServerTomcat implements ServerMBean {
      */
     public String getVersion() throws Exception {
         try {
-            return JmxHelper.queryString(OBJECTNAME_TOMCAT_SERVER,
+            return queryString(OBJECTNAME_TOMCAT_SERVER,
                     ATTRIBUTE_TOMCAT_SERVERINFO).replaceAll(".*/", "");
         } catch (AttributeNotFoundException e) {
             // hmm, it's an old version of Tomcat
