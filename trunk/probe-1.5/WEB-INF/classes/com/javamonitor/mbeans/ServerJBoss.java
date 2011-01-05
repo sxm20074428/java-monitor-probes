@@ -13,8 +13,8 @@ final class ServerJBoss extends ServerTomcat {
     /**
      * Test if we're maybe running inside a JBoss instance.
      * 
-     * @return <code>true</code> if we're inside JBoss, or <code>false</code>
-     *         if not.
+     * @return <code>true</code> if we're inside JBoss, or <code>false</code> if
+     *         not.
      */
     public static boolean runningInJBoss() {
         return JmxHelper.mbeanExists(OBJECTNAME_JBOSS_SERVER);
@@ -33,10 +33,6 @@ final class ServerJBoss extends ServerTomcat {
      */
     @Override
     public String getVersion() throws Exception {
-        return JmxHelper.queryString(OBJECTNAME_JBOSS_SERVER, "Version")
-                .replaceAll("\\(.*", "").trim()
-                + " ("
-                + JmxHelper.queryString(OBJECTNAME_JBOSS_SERVER, "VersionName")
-                + ")";
+        return JmxHelper.queryString(OBJECTNAME_JBOSS_SERVER, "Version");
     }
 }
