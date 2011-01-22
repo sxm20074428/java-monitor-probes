@@ -59,16 +59,24 @@ class ServerTomcat implements ServerMBean {
 
         int lowest = Integer.MAX_VALUE;
         for (final ObjectName connector : connectors) {
-            final String protocol = queryString(connector, "protocol");
-            if (protocol.startsWith("HTTP")) {
-                lowest = Math.min(lowest, queryInt(connector, "port"));
+            try {
+                final String protocol = queryString(connector, "protocol");
+                if (protocol.startsWith("HTTP")) {
+                    lowest = Math.min(lowest, queryInt(connector, "port"));
+                }
+            } catch (AttributeNotFoundException e) {
+                // quietly skip this connector, it's probably the wrong kind
             }
         }
 
         // maybe there are no HTTP connectors?
         if (lowest == Integer.MAX_VALUE) {
             for (final ObjectName connector : connectors) {
-                lowest = Math.min(lowest, queryInt(connector, "port"));
+                try {
+                    lowest = Math.min(lowest, queryInt(connector, "port"));
+                } catch (AttributeNotFoundException e) {
+                    // quietly skip this connector, it's probably the wrong kind
+                }
             }
         }
 
