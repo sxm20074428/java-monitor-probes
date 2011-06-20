@@ -1,8 +1,9 @@
 package com.javamonitor;
 
+import static com.javamonitor.mbeans.Server.serverObjectName;
+import static java.lang.Integer.parseInt;
+import static java.lang.Long.parseLong;
 import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
-
-
 
 import java.util.HashSet;
 import java.util.List;
@@ -72,17 +73,17 @@ public class JmxHelper {
      * 
      * @param mbean
      *            The mbean to register.
-     * @param objectNameString
+     * @param objectName
      *            The object name to register it under.
      * @throws Exception
      *             When there was a problem registering MBeans.
      */
-    public static void register(final Object mbean,
-            final String objectNameString) throws Exception {
-        unregister(objectNameString);
+    public static void register(final Object mbean, final String objectName)
+            throws Exception {
+        unregister(objectName);
 
         getPlatformMBeanServer().registerMBean(mbean,
-                new ObjectName(objectNameString));
+                new ObjectName(objectName));
     }
 
     /**
@@ -136,7 +137,7 @@ public class JmxHelper {
     public static Integer queryInt(final String objectName,
             final String attribute) throws Exception {
         final Object value = query(objectName, attribute);
-        return value == null ? null : Integer.parseInt(value.toString());
+        return value == null ? null : parseInt(value.toString());
     }
 
     /**
@@ -154,7 +155,7 @@ public class JmxHelper {
     public static Integer queryInt(final ObjectName objectName,
             final String attribute) throws Exception {
         final Object value = query(objectName, attribute);
-        return value == null ? null : Integer.parseInt(value.toString());
+        return value == null ? null : parseInt(value.toString());
     }
 
     /**
@@ -172,7 +173,7 @@ public class JmxHelper {
     public static Long queryLong(final ObjectName objectName,
             final String attribute) throws Exception {
         final Object value = query(objectName, attribute);
-        return value == null ? null : Long.parseLong(value.toString());
+        return value == null ? null : parseLong(value.toString());
     }
 
     /**
@@ -264,7 +265,7 @@ public class JmxHelper {
      *             When one of the MBeans could not be registered.
      */
     public static void registerCoolMBeans(final Server server) throws Exception {
-        register(server, Server.objectName);
+        register(server, serverObjectName);
         register(new Threading(), Threading.objectName);
         register(new DNSCachePolicy(), DNSCachePolicy.objectName);
     }
@@ -274,7 +275,7 @@ public class JmxHelper {
      * the registered beans were registered in the platform mbean server.
      */
     public static void unregisterCoolMBeans() {
-        unregister(Server.objectName);
+        unregister(serverObjectName);
         unregister(Threading.objectName);
         unregister(DNSCachePolicy.objectName);
     }

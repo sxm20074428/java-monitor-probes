@@ -1,6 +1,7 @@
 package com.javamonitor.mbeans;
 
-import com.javamonitor.JmxHelper;
+import static com.javamonitor.JmxHelper.objectNameBase;
+import static java.lang.System.getProperty;
 
 /**
  * The application server helper mbean. This mbean is responsible for
@@ -16,7 +17,7 @@ public class Server implements ServerMBean {
     /**
      * The object name for the application server helper mbean.
      */
-    public static final String objectName = JmxHelper.objectNameBase + "Server";
+    public static final String serverObjectName = objectNameBase + "Server";
 
     /**
      * The attribute name of the lowest HTTP port attribute.
@@ -56,6 +57,8 @@ public class Server implements ServerMBean {
             actualServer = new ServerJetty5();
         } else if (ServerJetty.runningInJetty()) {
             actualServer = new ServerJetty();
+        } else if (ServerResin.runningInResin()) {
+            actualServer = new ServerResin();
         } else {
             actualServer = null;
         }
@@ -77,7 +80,7 @@ public class Server implements ServerMBean {
      */
     public String getVersion() throws Exception {
         if (actualServer == null) {
-            return System.getProperty("java.version");
+            return getProperty("java.version");
         }
 
         return actualServer.getVersion();

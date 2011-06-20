@@ -1,11 +1,20 @@
 package com.javamonitor.mbeans;
 
+import static com.javamonitor.JmxHelper.mbeanExists;
+import static com.javamonitor.JmxHelper.queryNames;
+import static com.javamonitor.JmxHelper.queryString;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Integer.parseInt;
+import static java.lang.Math.min;
+import static java.lang.Thread.sleep;
+import static java.util.regex.Pattern.compile;
+
 import java.util.Collection;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
-
-import com.javamonitor.JmxHelper;
 
 /**
  * The tricky bits for Glassfish servers.
@@ -13,7 +22,9 @@ import com.javamonitor.JmxHelper;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 final class ServerGlassfish implements ServerMBean {
-    private static final String OBJECTNAME_GLASSFISH_SERVER = "com.sun.appserv:j2eeType=J2EEServer,category=runtime,*";
+    private static final String OBJECTNAME_GLASSFISH_SERVER_AMX = "amx:pp=,type=domain-root";
+    private static final String OBJECTNAME_GLASSFISH_SERVER_JMX = "com.sun.appserv:j2eeType=J2EEServer,category=runtime,*";
+    private static final Pattern PATTERN_VERSION = compile("\\d+\\.\\d+(\\.\\d+)*");
 
     /**
      * Test if we're maybe running inside a Glassfish instance.
@@ -23,8 +34,13 @@ final class ServerGlassfish implements ServerMBean {
      */
     public static boolean runningInGlassfish() {
         try {
-            final Set<ObjectName> serverNames = JmxHelper
-                    .queryNames(OBJECTNAME_GLASSFISH_SERVER);
+            // Glassfish 3.x
+            if (mbeanExists(OBJECTNAME_GLASSFISH_SERVER_AMX)) {
+                return true;
+            }
+
+            // Glassfish 2.x
+            final Set<ObjectName> serverNames = queryNames(OBJECTNAME_GLASSFISH_SERVER_JMX);
             return !serverNames.isEmpty();
         } catch (Exception e) {
             return false;
@@ -42,14 +58,29 @@ final class ServerGlassfish implements ServerMBean {
      * @see com.javamonitor.mbeans.ServerMBean#getVersion()
      */
     public String getVersion() throws Exception {
-        final Set<ObjectName> serverNames = JmxHelper
-                .queryNames(OBJECTNAME_GLASSFISH_SERVER);
+        final String versionAMX = getVersion(OBJECTNAME_GLASSFISH_SERVER_AMX,
+                "ApplicationServerFullVersion");
+        if (versionAMX != null) {
+            return versionAMX;
+        }
+
+        return getVersion(OBJECTNAME_GLASSFISH_SERVER_JMX, "serverVersion");
+    }
+
+    private String getVersion(String query, String attribute) throws Exception {
+        final Set<ObjectName> serverNames = queryNames(query);
         if (serverNames.isEmpty()) {
             return null;
         }
 
-        return JmxHelper.queryString(serverNames.iterator().next(),
-                "serverVersion").replaceFirst("^[^0-9]*", "").trim();
+        final String version = queryString(serverNames.iterator().next(),
+                attribute);
+
+        final Matcher matcher = PATTERN_VERSION.matcher(version);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
     }
 
     /**
@@ -59,10 +90,10 @@ final class ServerGlassfish implements ServerMBean {
         Collection<ObjectName> selectors = null;
         int slept = 0;
         do {
-            selectors = JmxHelper.queryNames("com.sun.appserv:type=Selector,*");
+            selectors = queryNames("com.sun.appserv:type=Selector,*");
             if (selectors.size() < 1) {
                 try {
-                    Thread.sleep(1000L);
+                    sleep(1000L);
                 } catch (InterruptedException e) {
                     // won't happen...
                 }
@@ -75,25 +106,23 @@ final class ServerGlassfish implements ServerMBean {
                             + " selector MBeans were not loaded after 30 seconds, aborting");
         }
 
-        int lowest = Integer.MAX_VALUE;
+        int lowest = MAX_VALUE;
         for (final ObjectName selector : selectors) {
             final String name = selector.toString();
             if (name.contains("http")) {
-                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
-                        "[^0-9]", "")));
+                lowest = min(lowest, parseInt(name.replaceAll("[^0-9]", "")));
             }
         }
 
         // maybe there are no HTTP connectors?
-        if (lowest == Integer.MAX_VALUE) {
+        if (lowest == MAX_VALUE) {
             for (final ObjectName selector : selectors) {
                 final String name = selector.toString();
-                lowest = Math.min(lowest, Integer.parseInt(name.replaceAll(
-                        "[0-9]", "")));
+                lowest = min(lowest, parseInt(name.replaceAll("[0-9]", "")));
             }
         }
 
-        if (lowest == Integer.MAX_VALUE) {
+        if (lowest == MAX_VALUE) {
             return null;
         }
 
