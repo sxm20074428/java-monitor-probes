@@ -3,9 +3,12 @@ package com.javamonitor;
 import static com.javamonitor.JmxHelper.mbeanExists;
 import static com.javamonitor.JmxHelper.registerCoolMBeans;
 import static com.javamonitor.JmxHelper.unregisterCoolMBeans;
+import static com.javamonitor.mbeans.Server.serverObjectName;
 import static java.lang.System.getProperty;
 import static java.lang.System.getenv;
 import static java.lang.Thread.sleep;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Logger.getLogger;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,8 +22,8 @@ import com.javamonitor.mbeans.Server;
  * @author Kees Jan Koster &lt;kjkoster@kjkoster.org&gt;
  */
 public class JavaMonitorCollector {
-    private static final Logger log = Logger
-            .getLogger(JavaMonitorCollector.class.getName());
+    private static final Logger log = getLogger(JavaMonitorCollector.class
+            .getName());
 
     private Thread collectorThread = null;
 
@@ -104,7 +107,7 @@ public class JavaMonitorCollector {
      *             When the helper MBeans could not be registered.
      */
     public synchronized void start() throws Exception {
-        if (mbeanExists(Server.objectName)) {
+        if (mbeanExists(serverObjectName)) {
             throw new OnHoldException(
                     "A Java-monitor probe is already running in this JVM. See http://java-monitor.com/duplicate-probe.html");
         }
@@ -172,7 +175,7 @@ public class JavaMonitorCollector {
             } catch (InterruptedException e) {
                 // ignore. we're exiting
             } catch (OnHoldException e) {
-                log.log(Level.SEVERE,
+                log.log(SEVERE,
                         "This probe was put on hold by the collector (redeploy to try again): "
                                 + e.getOnHoldBecause());
             }

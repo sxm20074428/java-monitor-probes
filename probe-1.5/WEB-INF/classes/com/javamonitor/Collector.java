@@ -1,6 +1,9 @@
 package com.javamonitor;
 
 import static com.javamonitor.JmxHelper.queryString;
+import static com.javamonitor.mbeans.Server.httpPortAttribute;
+import static com.javamonitor.mbeans.Server.nameAttribute;
+import static com.javamonitor.mbeans.Server.serverObjectName;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
 import static java.net.Proxy.NO_PROXY;
@@ -30,8 +33,6 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.management.ObjectName;
-
-import com.javamonitor.mbeans.Server;
 
 /**
  * The data collector and interface to the collector server.
@@ -79,7 +80,7 @@ final class Collector {
      *            <code>null</code> to use the port number.
      */
     Collector(final String uniqueId) {
-        this.uniqueId = uniqueId == null ? null : uniqueId;
+        this.uniqueId = uniqueId;
 
         final String proxyHost = getProperty("http.proxyHost");
         final int proxyPort = parseInt(getProperty("http.proxyPort", "80"));
@@ -125,14 +126,13 @@ final class Collector {
         if (uniqueId != null) {
             request.put("lowestPort", uniqueId);
         } else {
-            final String lowestPort = queryString(Server.objectName,
-                    Server.httpPortAttribute);
+            final String lowestPort = queryString(serverObjectName,
+                    httpPortAttribute);
             if (lowestPort != null) {
                 request.put("lowestPort", lowestPort);
             }
         }
-        request.put("appserver", queryString(Server.objectName,
-                Server.nameAttribute));
+        request.put("appserver", queryString(serverObjectName, nameAttribute));
         if (session != null) {
             request.put(SESSION, session);
         }
@@ -170,6 +170,8 @@ final class Collector {
                 }
                 s = new Socket(pushUrl.getHost(), port);
             }
+
+            s.setSoTimeout(TWO_MINUTES);
             return s.getLocalAddress().getHostAddress();
         } finally {
             if (s != null) {

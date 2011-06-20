@@ -1,9 +1,9 @@
 package com.javamonitor.mbeans;
 
+import static com.javamonitor.JmxHelper.objectNameBase;
+
 import java.lang.reflect.InvocationTargetException;
 import java.security.Security;
-
-import com.javamonitor.JmxHelper;
 
 /**
  * An implementation of the DNS cache policy MBean interface for Sun JVM's.
@@ -14,8 +14,7 @@ public class DNSCachePolicy implements DNSCachePolicyMBean {
     /**
      * The object name for the threading helper mbean.
      */
-    public static final String objectName = JmxHelper.objectNameBase
-            + "DNSCachePolicy";
+    public static final String objectName = objectNameBase + "DNSCachePolicy";
 
     private static final String POLICY = "sun.net.InetAddressCachePolicy";
 
@@ -29,7 +28,7 @@ public class DNSCachePolicy implements DNSCachePolicyMBean {
         final Class policy = Class.forName(POLICY);
         final Object returnValue = policy.getMethod("get", (Class[]) null)
                 .invoke(null, (Object[]) null);
-        Integer seconds = (Integer) returnValue;
+        final Integer seconds = (Integer) returnValue;
 
         return seconds.intValue();
     }
@@ -44,7 +43,7 @@ public class DNSCachePolicy implements DNSCachePolicyMBean {
         final Class policy = Class.forName(POLICY);
         final Object returnValue = policy.getMethod("getNegative",
                 (Class[]) null).invoke(null, (Object[]) null);
-        Integer seconds = (Integer) returnValue;
+        final Integer seconds = (Integer) returnValue;
 
         return seconds.intValue();
     }
