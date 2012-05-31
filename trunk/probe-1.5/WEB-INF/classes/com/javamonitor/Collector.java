@@ -295,6 +295,7 @@ final class Collector {
         if (response.get(SESSION) != null) {
             session = (String) response.remove(SESSION);
 
+            items.clear();
             for (final Map.Entry<Object, Object> entry : response.entrySet()) {
                 final String[] parts = ((String) entry.getValue()).split("\\|");
 
